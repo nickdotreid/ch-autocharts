@@ -62,7 +62,10 @@ def index(request):
                     'name':values[0].value
                 }
                 for key in item_keys:
-                    d[item_keys[key]] = values[key].value
+                    if item_keys[key] in ['low', 'high', 'percent'] and not values[key].value:
+                        d[item_keys[key]] = 0
+                    else:
+                        d[item_keys[key]] = values[key].value
                 data.append(d)
     return render_to_response('index.html',{
         'form':form,

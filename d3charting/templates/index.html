@@ -29,6 +29,7 @@
                         var data = {{data}};
                     </script>
                     {% endautoescape %}
+                    <div id="chart"></div>
                 {% endblock content %}
             </div>
         </div>
@@ -36,7 +37,7 @@
         <!-- Enter scripts here -->
         <script type="text/javascript" src="{{STATIC_URL}}jquery/jquery.js"></script>
         <script type="text/javascript" src="{{STATIC_URL}}d3/d3.min.js"></script>
-
+        <script type="text/javascript" src="{{STATIC_URL}}js/main.js"></script>
         {% endblock scripts %}
     </body>
 </html>
