@@ -22,9 +22,9 @@ function make_chart(data){
 		.attr("width", chart.width())
 		.attr("height", chart.height());
 
-	canvas = svg.append("g").attr("transform", "translate(100,0)");
 	yaxis = svg.append("g");
 	xaxis = svg.append("g").attr("transform", function(){ return "translate(100,"+canvas_height+")"; })
+	canvas = svg.append("g").attr("transform", "translate(100,0)");
 
 	var x = d3.scale.linear().domain([
 		d3.min(data, function(d){ 
@@ -38,8 +38,8 @@ function make_chart(data){
 	var tickMarks = xaxis.selectAll("g").data(ticks).enter().append("g").attr("transform", function(d){
 		return "translate("+x(d)+",0)";
 	});
-	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",15).attr("stroke","black").attr("stroke-width","1");
-	tickMarks.append("text").attr("x",0).attr("y",30).text(function(d){ return d; });
+	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-canvas_height).attr("stroke","black").attr("stroke-width","1");
+	tickMarks.append("text").attr("x",0).attr("y",15).text(function(d){ return d; });
 
 	var bar = canvas.selectAll("g").data(data).enter().append("g").attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
 
