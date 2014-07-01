@@ -31,4 +31,7 @@ function make_chart(data){
 	}).attr("fill", function(d){
 		return color(d.name);
 	});
+
+	var svg = (new XMLSerializer).serializeToString($("svg")[0]);
+	$("#svgform #id_svg").val(svg);
 }

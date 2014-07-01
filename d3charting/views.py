@@ -12,6 +12,8 @@ from crispy_forms.layout import Submit
 
 import xlrd
 
+import cairosvg
+
 class ExcelUploadForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
@@ -30,6 +32,29 @@ class ExcelUploadForm(forms.Form):
             )
 
     file = forms.FileField(required=True)
+
+class SVGDownloadForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SVGDownloadForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_id = "svgform"
+        self.helper.form_method = "POST"
+        self.helper.form_action = reverse(save)
+
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-lg-2'
+        self.helper.field_class = 'col-lg-8'
+
+        self.helper.layout = Layout(
+            'filetype',
+            'svg',
+            Submit('submit', 'Download'),
+            )
+    filetype = forms.ChoiceField(choices=(
+        ('svg','SVG'),
+        ('png','PNG'),
+        ))
+    svg = forms.CharField()
 
 def index(request):
     form = ExcelUploadForm()
@@ -69,6 +94,7 @@ def index(request):
                 data.append(d)
     return render_to_response('index.html',{
         'form':form,
+        'svgform':SVGDownloadForm(),
         'data':json.dumps(data),
         },context_instance=RequestContext(request))
 
@@ -78,4 +104,8 @@ def upload(request):
 def save(request):
     if not request.POST:
         return HttpResponseRedirect(reverse(index))
-    # do some magic to turn an SVG into a PNG (or download the SVG)
+    form = SVGDownloadForm(request.POST)
+    if not form.is_valid():
+        return HttpResponseRedirect(reverse(index))
+    image_data = cairosvg.svg2png(form.cleaned_data['svg'])
+    return HttpResponse(image_data, mimetype="image/png")
