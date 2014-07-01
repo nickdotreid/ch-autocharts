@@ -107,5 +107,11 @@ def save(request):
     form = SVGDownloadForm(request.POST)
     if not form.is_valid():
         return HttpResponseRedirect(reverse(index))
-    image_data = cairosvg.svg2png(form.cleaned_data['svg'])
-    return HttpResponse(image_data, mimetype="image/png")
+    if form.cleaned_data['filetype'] == 'png':
+        image_data = cairosvg.svg2png(form.cleaned_data['svg'])
+        response = HttpResponse(image_data, mimetype="image/png")
+        response['Content-Disposition'] = 'attachment; filename="foo.png"'
+        return response
+    response = HttpResponse(form.cleaned_data['svg'],mimetype="image/svg")
+    response['Content-Disposition'] = 'attachment; filename="foo.svg"'
+    return response
