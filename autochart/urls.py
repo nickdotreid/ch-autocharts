@@ -13,5 +13,5 @@ urlpatterns = patterns("",
     
     # There's no favicon here!
     url(r"^favicon.ico$", generic.RedirectView.as_view()),
-    
+    url(r"^", include('d3charting.urls')),
 )
