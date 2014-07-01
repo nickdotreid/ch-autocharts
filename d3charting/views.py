@@ -44,9 +44,16 @@ def index(request):
             data = []
             item_keys = {}
             for num, cell in enumerate(sheet.row(0)):
-                if cell.value:
+                if not cell.value:
+                    continue
+                if 'percent' in cell.value.lower():
+                    item_keys[num] = 'percent'
+                elif 'hi' in cell.value.lower():
+                    item_keys[num] = 'high'
+                elif 'lo' in cell.value.lower():
+                    item_keys[num] = 'low'
+                else:
                     item_keys[num] = cell.value
-            print item_keys
             for row_num in range(1,sheet.nrows):
                 values = sheet.row(row_num)
                 if not values[0].value:

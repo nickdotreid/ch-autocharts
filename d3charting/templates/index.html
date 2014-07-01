@@ -23,15 +23,12 @@
         <div class="container">
             <div class="content content-main">
                 {% block content %}
-                {% if data %}
-                {% autoescape off %}
-                <script type="text/javascript">
-                    var data = {{data}};
-                </script>
-                {% endautoescape %}
-                {% else %}
-                {%crispy form %}
-                {% endif %}
+                    {%crispy form %}
+                    {% autoescape off %}
+                    <script type="text/javascript">
+                        var data = {{data}};
+                    </script>
+                    {% endautoescape %}
                 {% endblock content %}
             </div>
         </div>
