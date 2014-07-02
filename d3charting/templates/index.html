@@ -26,12 +26,18 @@
                 {% block content %}
                     {%crispy form %}
                     {% autoescape off %}
-                    <script type="text/javascript">
-                        var data = {{data}};
-                    </script>
+                        <script type="text/javascript">
+                            var data = {{data}};
+                        </script>
                     {% endautoescape %}
-                    <div id="chart"></div>
-                    {%crispy svgform%}
+                    <div class="row">
+                    <div class="col-md-8">
+                        <div id="chart"></div>
+                    </div>
+                    <div class="col-md-4">
+                        {%crispy svgform%}
+                    </div>
+                    </div>
                 {% endblock content %}
             </div>
         </div>

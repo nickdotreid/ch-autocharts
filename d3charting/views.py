@@ -41,20 +41,29 @@ class SVGDownloadForm(forms.Form):
         self.helper.form_method = "POST"
         self.helper.form_action = reverse(save)
 
-        self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = 'col-lg-2'
-        self.helper.field_class = 'col-lg-8'
-
         self.helper.layout = Layout(
+            'formtype',
+            'min',
+            'max',
+            'ticks',
             'filetype',
             'svg',
             Submit('submit', 'Download'),
             )
+    formtype = forms.ChoiceField(required = False, label="Graph Type", choices=(
+        ('horizontal','Horizontal'),
+        ('vertical','Vertical'),
+        ),
+        widget=forms.RadioSelect)
+    min = forms.CharField(required = False, label="min axis value")
+    max = forms.CharField(required = False, label="max axis value")
+    ticks = forms.CharField(required = False, label="Number of ticks")
     filetype = forms.ChoiceField(choices=(
         ('svg','SVG'),
         ('png','PNG'),
-        ))
-    svg = forms.CharField()
+        ),
+        widget = forms.RadioSelect)
+    svg = forms.CharField(widget=forms.HiddenInput)
 
 def index(request):
     form = ExcelUploadForm()
