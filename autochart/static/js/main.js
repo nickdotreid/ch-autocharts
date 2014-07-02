@@ -39,7 +39,14 @@ function make_chart(data){
 		return "translate("+x(d)+",0)";
 	});
 	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-canvas_height).attr("stroke","black").attr("stroke-width","1");
-	tickMarks.append("text").attr("x",0).attr("y",15).text(function(d){ return d; });
+	tickMarks.append("text").text(function(d){ return d; }).attr({
+		"font-size":"10px",
+		"font-family":"Arial",
+	}).attr("x",function(){
+		return 0-this.getBBox().width/2;
+	}).attr("y",function(){
+		return this.getBBox().height + 5;
+	});
 
 	var bar = canvas.selectAll("g").data(data).enter().append("g").attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
 
