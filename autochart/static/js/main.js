@@ -49,6 +49,17 @@ function make_chart(data){
 		return color(d.name);
 	});
 
+	bar.append("text").text(function(d){
+		return d.name;
+	}).attr({
+		"font-size":"10px",
+		"font-family":"Arial",
+	}).attr("x",function(){
+		return -10-this.getBBox().width;
+	}).attr("y",function(){
+		return this.getBBox().height;
+	})
+
 	bar.append("line").attr("x1",function(d){
 		return x(d.low);
 	}).attr("x2", function(d){
