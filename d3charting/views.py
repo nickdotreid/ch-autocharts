@@ -79,12 +79,15 @@ def index(request):
                     item_keys[num] = 'low'
                 else:
                     item_keys[num] = cell.value
+            group_num = 1
             for row_num in range(1,sheet.nrows):
                 values = sheet.row(row_num)
                 if not values[0].value:
+                    group_num += 1
                     continue
                 d = {
-                    'name':values[0].value
+                    'name':values[0].value,
+                    'group':group_num,
                 }
                 for key in item_keys:
                     if item_keys[key] in ['low', 'high', 'percent'] and not values[key].value:
