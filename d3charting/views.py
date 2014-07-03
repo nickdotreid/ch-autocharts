@@ -8,7 +8,7 @@ from django.template import RequestContext
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
-from crispy_forms.layout import Submit
+from crispy_forms.layout import Submit, Div
 
 import xlrd
 
@@ -43,9 +43,21 @@ class SVGDownloadForm(forms.Form):
 
         self.helper.layout = Layout(
             'formtype',
-            'min',
-            'max',
-            'ticks',
+            Div(
+                Div(
+                    'min',
+                    css_class="col-md-4",
+                    ),
+                Div(
+                    'max',
+                    css_class="col-md-4",
+                    ),
+                Div(
+                    'ticks',
+                    css_class="col-md-4",
+                    ),
+                css_class="row",
+                ),
             'filetype',
             'svg',
             Submit('submit', 'Download'),
@@ -53,16 +65,14 @@ class SVGDownloadForm(forms.Form):
     formtype = forms.ChoiceField(required = False, label="Graph Type", choices=(
         ('horizontal','Horizontal'),
         ('vertical','Vertical'),
-        ),
-        widget=forms.RadioSelect)
-    min = forms.CharField(required = False, label="min axis value")
-    max = forms.CharField(required = False, label="max axis value")
-    ticks = forms.CharField(required = False, label="Number of ticks")
+        ))
+    min = forms.CharField(required = False, label="min axis")
+    max = forms.CharField(required = False, label="max axis")
+    ticks = forms.CharField(required = False, label="# of ticks")
     filetype = forms.ChoiceField(choices=(
         ('svg','SVG'),
         ('png','PNG'),
-        ),
-        widget = forms.RadioSelect)
+        ))
     svg = forms.CharField(widget=forms.HiddenInput)
 
 def parse_worksheet(sheet):
