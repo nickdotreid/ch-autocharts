@@ -104,10 +104,12 @@ def index(request):
                     else:
                         d[item_keys[key]] = values[key].value
                 data.append(d)
+            return render_to_response('charts.html',{
+                'form':SVGDownloadForm(),
+                'data':json.dumps(data),
+                },context_instance=RequestContext(request))
     return render_to_response('index.html',{
         'form':form,
-        'svgform':SVGDownloadForm(),
-        'data':json.dumps(data),
         },context_instance=RequestContext(request))
 
 def upload(request):
