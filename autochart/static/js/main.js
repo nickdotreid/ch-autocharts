@@ -136,7 +136,16 @@ function make_chart(div,data,settings){
 	var chartHeight = settings.height - tickHeight - settings.padding
 
 	if(settings.label){
-		// add a label
+		axis.append("text").text(settings.label)
+		.attr({
+			"font-size":"12px",
+			"font-family":"Arial",
+		}).attr("y",function(){
+			chartHeight = chartHeight - this.getBBox().height - settings.padding;
+			return this.getBBox().height + settings.padding + tickHeight +settings.padding;
+		}).attr("x",function(){
+			return chartWidth/2 - (this.getBBox().width/2);
+		});
 	}
 
 	axis.attr("transform", function(){ return "translate("+yAxisWidth+","+chartHeight+")"; });
