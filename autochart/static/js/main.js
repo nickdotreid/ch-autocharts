@@ -21,6 +21,9 @@ $(document).ready(function(){
 		var chart = $(this);
 		var form = $('form',chart.parents('.row'));
 		make_chart(chart,data[chart.data("name")],form.serializeObject());
+		$('input',form).change(function(){
+			make_chart(chart,data[chart.data("name")],form.serializeObject());
+		});
 	});
 });
 
@@ -98,11 +101,16 @@ function make_chart(div,data,settings){
 	canvas.attr("transform", "translate("+yAxisWidth+",0)");
 
 	chartWidth = settings.width - yAxisWidth - settings.padding - settings.padding;
+	
+	if(!settings.min){
+		settings.min = d3.min(data, function(d){ return d.low; });
+	}
+	if(!settings.max){
+		settings.max = d3.max(data, function(d){ return d.high; });
+	}
 	var x = d3.scale.linear().domain([
-		d3.min(data, function(d){ 
-			return d.low;
-			 }),
-		d3.max(data, function(d){ return d.high; })
+		settings.min,
+		settings.max
 		]).range([0,chartWidth]);
 
 	// figure out x-axis height
