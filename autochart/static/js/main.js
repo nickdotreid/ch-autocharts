@@ -1,11 +1,47 @@
+// FROM:: http://stackoverflow.com/questions/1184624/convert-form-data-to-js-object-with-jquery
+$.fn.serializeObject = function()
+{
+    var o = {};
+    var a = this.serializeArray();
+    $.each(a, function() {
+        if (o[this.name] !== undefined) {
+            if (!o[this.name].push) {
+                o[this.name] = [o[this.name]];
+            }
+            o[this.name].push(this.value || '');
+        } else {
+            o[this.name] = this.value || '';
+        }
+    });
+    return o;
+};
+
 $(document).ready(function(){
 	$(".chart").each(function(){
 		var chart = $(this);
-		make_chart(chart,data[chart.data("name")]);
+		var form = $('form',chart.parents('.row'));
+		make_chart(chart,data[chart.data("name")],form.serializeObject());
 	});
 });
 
-function make_chart(div,data){
+function make_chart(div,data,settings){
+	defaultSettings = {
+		'width':650,
+		'height':350,
+		'min':false,
+		'max':false,
+		'ticks':6,
+		'label':'',
+	}
+	if(!settings){
+		settings = {};
+	}
+	for(name in defaultSettings){
+		if(!settings[name] || settings[name]==""){
+			settings[name] = defaultSettings[name];
+		}
+	}
+
 	y_axis_width = 100;
 	x_axis_height = 100;
 	barHeight = 20;
@@ -24,6 +60,7 @@ function make_chart(div,data){
 	canvas_height += barHeight; // padding at the bottom
 
 	var chart = div
+	chart.html("")
 	chart.width(y_axis_width+canvas_width+10);
 	chart.height(canvas_height+x_axis_height);
 
@@ -122,5 +159,5 @@ function make_chart(div,data){
 	});
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
-	$("#svgform #id_svg").val(svg);
+	$("#svgform #id_svg",chart.parents(".row")).val(svg);
 }
