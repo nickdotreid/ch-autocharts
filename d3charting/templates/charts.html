@@ -2,17 +2,20 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-    <div class="row">
-    <div class="col-md-8">
-        <div id="chart"></div>
+	<script type="text/javascript">
+		var data = {};
+	</script>
+	{% for chart in charts %}
+	<div class="row">
+    	<div class="col-md-8">
+        	<div data-name="{{chart.name}}" class="chart"></div>
+    	</div>
+	    <div class="col-md-4">
+	        {%crispy chart.form%}
+	    </div>
     </div>
-    <div class="col-md-4">
-        {%crispy form%}
-    </div>
-    </div>
-        {% autoescape off %}
     <script type="text/javascript">
-        var data = {{data}};
+    	data["{{chart.name}}"] = {% autoescape off %}{{chart.data}}{% endautoescape %};
     </script>
-    {% endautoescape %}
+	{% endfor %}
 {% endblock content %}

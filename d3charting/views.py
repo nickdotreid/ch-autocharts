@@ -65,6 +65,38 @@ class SVGDownloadForm(forms.Form):
         widget = forms.RadioSelect)
     svg = forms.CharField(widget=forms.HiddenInput)
 
+def parse_worksheet(sheet):
+    data = []
+    item_keys = {}
+    for num, cell in enumerate(sheet.row(0)):
+        if not cell.value:
+            continue
+        if 'percent' in cell.value.lower():
+            item_keys[num] = 'percent'
+        elif 'hi' in cell.value.lower():
+            item_keys[num] = 'high'
+        elif 'lo' in cell.value.lower():
+            item_keys[num] = 'low'
+        else:
+            item_keys[num] = cell.value
+    group_num = 1
+    for row_num in range(1,sheet.nrows):
+        values = sheet.row(row_num)
+        if not values[0].value:
+            group_num += 1
+            continue
+        d = {
+            'name':values[0].value.encode('ascii', 'ignore'),
+            'group':group_num,
+        }
+        for key in item_keys:
+            if item_keys[key] in ['low', 'high', 'percent'] and not values[key].value:
+                d[item_keys[key]] = 0
+            else:
+                d[item_keys[key]] = values[key].value
+        data.append(d)
+    return data
+
 def index(request):
     form = ExcelUploadForm()
     data = False
@@ -73,40 +105,16 @@ def index(request):
         if form.is_valid():
             xls = request.FILES['file']
             book = xlrd.open_workbook(file_contents = xls.read())
-            worksheet_names = book.sheet_names()
-            sheet = book.sheet_by_name(worksheet_names[0])
-            data = []
-            item_keys = {}
-            for num, cell in enumerate(sheet.row(0)):
-                if not cell.value:
-                    continue
-                if 'percent' in cell.value.lower():
-                    item_keys[num] = 'percent'
-                elif 'hi' in cell.value.lower():
-                    item_keys[num] = 'high'
-                elif 'lo' in cell.value.lower():
-                    item_keys[num] = 'low'
-                else:
-                    item_keys[num] = cell.value
-            group_num = 1
-            for row_num in range(1,sheet.nrows):
-                values = sheet.row(row_num)
-                if not values[0].value:
-                    group_num += 1
-                    continue
-                d = {
-                    'name':values[0].value,
-                    'group':group_num,
-                }
-                for key in item_keys:
-                    if item_keys[key] in ['low', 'high', 'percent'] and not values[key].value:
-                        d[item_keys[key]] = 0
-                    else:
-                        d[item_keys[key]] = values[key].value
-                data.append(d)
+
+            charts = []
+            for name in book.sheet_names():
+                charts.append({
+                    'name':name,
+                    'data':parse_worksheet(book.sheet_by_name(name)),
+                    'form':SVGDownloadForm(),
+                    })
             return render_to_response('charts.html',{
-                'form':SVGDownloadForm(),
-                'data':json.dumps(data),
+                'charts':charts,
                 },context_instance=RequestContext(request))
     return render_to_response('index.html',{
         'form':form,

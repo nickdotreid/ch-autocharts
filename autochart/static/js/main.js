@@ -1,10 +1,11 @@
 $(document).ready(function(){
-	if(data){
-		make_chart(data);
-	}
+	$(".chart").each(function(){
+		var chart = $(this);
+		make_chart(chart,data[chart.data("name")]);
+	});
 });
 
-function make_chart(data){
+function make_chart(div,data){
 	y_axis_width = 100;
 	x_axis_height = 100;
 	barHeight = 20;
@@ -22,7 +23,7 @@ function make_chart(data){
 	}
 	canvas_height += barHeight; // padding at the bottom
 
-	var chart = $("#chart");
+	var chart = div
 	chart.width(y_axis_width+canvas_width+10);
 	chart.height(canvas_height+x_axis_height);
 
@@ -37,7 +38,7 @@ function make_chart(data){
 		return groupScales(group)(name);
 	}
 
-	var svg = d3.select("#chart").append("svg:svg")
+	var svg = d3.select(chart[0]).append("svg:svg")
 		.attr("width", chart.width())
 		.attr("height", chart.height());
 
@@ -120,6 +121,6 @@ function make_chart(data){
 		return this.getBBox().height + 5;
 	});
 
-	var svg = (new XMLSerializer).serializeToString($("svg")[0]);
+	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg").val(svg);
 }
