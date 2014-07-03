@@ -46,8 +46,9 @@ class SVGDownloadForm(forms.Form):
             'label',
             'target',
             Div(
-                Div('width', css_class="col-md-6"),
-                Div('height', css_class="col-md-6"),
+                Div('width', css_class="col-md-4"),
+                Div('height', css_class="col-md-4"),
+                Div('padding', css_class="col-md-4"),
                 css_class="row",
                 ),
             Div(
@@ -75,6 +76,7 @@ class SVGDownloadForm(forms.Form):
         ))
     height = forms.CharField(required = False, label="Chart height")
     width = forms.CharField(required = False, label="Chart width")
+    padding = forms.CharField(required = False, label="Padding")
     min = forms.CharField(required = False, label="Min axis")
     max = forms.CharField(required = False, label="Max axis")
     ticks = forms.CharField(required = False, label="# of ticks")
