@@ -43,6 +43,13 @@ class SVGDownloadForm(forms.Form):
 
         self.helper.layout = Layout(
             'formtype',
+            'label',
+            'target',
+            Div(
+                Div('width', css_class="col-md-6"),
+                Div('height', css_class="col-md-6"),
+                css_class="row",
+                ),
             Div(
                 Div(
                     'min',
@@ -66,9 +73,15 @@ class SVGDownloadForm(forms.Form):
         ('horizontal','Horizontal'),
         ('vertical','Vertical'),
         ))
-    min = forms.CharField(required = False, label="min axis")
-    max = forms.CharField(required = False, label="max axis")
+    height = forms.CharField(required = False, label="Chart height")
+    width = forms.CharField(required = False, label="Chart width")
+    min = forms.CharField(required = False, label="Min axis")
+    max = forms.CharField(required = False, label="Max axis")
     ticks = forms.CharField(required = False, label="# of ticks")
+    label = forms.CharField(required=False, label="Axis label")
+    target = forms.ChoiceField(required=False, label="Target variable", choices=[
+        ('','Select a target'),
+        ])
     filetype = forms.ChoiceField(choices=(
         ('svg','SVG'),
         ('png','PNG'),
