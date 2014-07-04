@@ -106,8 +106,6 @@ function make_chart(div,data,settings){
 		return d.children[0].getBBox().width;
 	});
 
-	canvas.attr("transform", "translate("+yAxisWidth+",0)");
-
 	chartWidth = settings.width - yAxisWidth - settings.padding - settings.padding;
 	
 	if(!settings.min){
@@ -210,6 +208,8 @@ function make_chart(div,data,settings){
 		return x(d.high);
 	}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
 	.attr("stroke","black").attr("stroke-width","1");
+
+	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
