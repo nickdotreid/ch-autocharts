@@ -76,7 +76,6 @@ function make_chart(div,data,settings){
 	canvas = svg.append("g").attr("transform", "translate(0,0)");
 
 	// figure out y-axis width
-	// Create bars, but don't set y-position
 	var ypos = 0;
 	last_group = 0;
 	var bars = canvas.selectAll("g").data(data).enter()
@@ -153,13 +152,13 @@ function make_chart(div,data,settings){
 
 	var steps = 0;
 	last_group = 0;
-	for(d in data){
+	data.forEach(function(d){
 		if(d.group != last_group){
 			last_group = d.group;
 			steps += 1;
 		}
 		steps +=1;
-	}
+	});
 	steps += 1; // space at bottom
 
 	barHeight = chartHeight/steps;
