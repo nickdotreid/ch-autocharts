@@ -48,8 +48,17 @@ function make_chart(div,data,settings){
 		}
 	}
 
+	var target = false;
 	if(settings.target){
-		// remove data point that is target.
+		var newData = []
+		data.forEach(function(d){
+			if(d.name == settings.target){
+				target = d;
+			}else{
+				newData.push(d);
+			}
+		});
+		data = newData;
 	}
 
 	var blueScale = d3.scale.ordinal().range(['rgb(198,219,239)','rgb(158,202,225)','rgb(107,174,214)','rgb(66,146,198)','rgb(33,113,181)','rgb(8,81,156)','rgb(8,48,107)']);
