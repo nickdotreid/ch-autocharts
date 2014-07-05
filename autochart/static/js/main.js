@@ -211,6 +211,23 @@ function make_chart(div,data,settings){
 
 	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
 
+	if(target){
+		var targetPos = x(target.percent);
+		canvas.append("text").text(target.name).attr({
+			"font-size":"10px",
+			"font-family":"Arial",
+		}).attr("x", function(){
+			return targetPos+settings.padding;
+		});
+		canvas.append("line").attr({
+			"x1":targetPos,
+			"x2":targetPos,
+			"y1":0,
+			"y2":ypos+barHeight,
+		}).attr("stroke","black").attr("stroke-width","1").attr("stroke-dasharray","4,2");
+
+	}
+
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
 }
