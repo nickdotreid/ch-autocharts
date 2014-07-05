@@ -157,6 +157,25 @@ function make_chart(div,data,settings){
 	axis.attr("transform", function(){ return "translate("+yAxisWidth+","+chartHeight+")"; });
 	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight).attr("stroke","gray").attr("stroke-width","1");
 
+	if(target){
+		var targetPos = x(target.percent);
+		canvas.append("text").text(target.name).attr({
+			"font-size":"10px",
+			"font-family":"Arial",
+		}).attr("x", function(){
+			return targetPos+settings.padding;
+		}).attr("y",function(){
+			return this.getBBox().height;
+		});
+		axis.append("line").attr({
+			"x1":targetPos,
+			"x2":targetPos,
+			"y1":0,
+			"y2":0-chartHeight,
+		}).attr("stroke","black").attr("stroke-width","1").attr("stroke-dasharray","4,2");
+
+	}
+
 	var steps = 0;
 	last_group = 0;
 	data.forEach(function(d){
@@ -210,23 +229,6 @@ function make_chart(div,data,settings){
 	.attr("stroke","black").attr("stroke-width","1");
 
 	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
-
-	if(target){
-		var targetPos = x(target.percent);
-		canvas.append("text").text(target.name).attr({
-			"font-size":"10px",
-			"font-family":"Arial",
-		}).attr("x", function(){
-			return targetPos+settings.padding;
-		});
-		canvas.append("line").attr({
-			"x1":targetPos,
-			"x2":targetPos,
-			"y1":0,
-			"y2":ypos+barHeight,
-		}).attr("stroke","black").attr("stroke-width","1").attr("stroke-dasharray","4,2");
-
-	}
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
