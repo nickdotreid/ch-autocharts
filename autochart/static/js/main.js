@@ -140,7 +140,23 @@ function make_chart(div,data,settings){
 	var tickMarks = axis.selectAll("g").data(ticks).enter().append("g").attr("transform", function(d){
 		return "translate("+x(d)+",0)";
 	});
-	tickMarks.append("text").text(function(d){ return d; }).style({
+
+	var tickMarksHidden = false;
+	if(settings.ticks > 10){
+		tickMarksHidden = true;
+	}
+	var tickVisible = true;
+
+	tickMarks.append("text").text(function(d){ 
+		var text = d;
+		if(!tickVisible){
+			text = "";
+		}
+		if(tickMarksHidden){
+			tickVisible = !tickVisible;
+		}
+		return text;
+	}).style({
 		"font-size":"10px",
 		"font-family":"Arial",
 	}).attr("x",function(){
