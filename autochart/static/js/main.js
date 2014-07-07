@@ -101,10 +101,10 @@ function make_chart(div,data,settings){
 
 	bars.append("text").text(function(d){
 		return d.name;
-	}).attr({
+	}).style({
 		"font-size":"10px",
 		"font-family":"Arial",
-		"font-style":"Bold",
+		"font-weight":"Bold",
 	}).attr("x",function(){
 		return -settings.padding-this.getBBox().width;
 	}).attr("y",function(){
@@ -140,7 +140,7 @@ function make_chart(div,data,settings){
 	var tickMarks = axis.selectAll("g").data(ticks).enter().append("g").attr("transform", function(d){
 		return "translate("+x(d)+",0)";
 	});
-	tickMarks.append("text").text(function(d){ return d; }).attr({
+	tickMarks.append("text").text(function(d){ return d; }).style({
 		"font-size":"10px",
 		"font-family":"Arial",
 	}).attr("x",function(){
@@ -158,9 +158,10 @@ function make_chart(div,data,settings){
 
 	if(settings.label){
 		axis.append("text").text(settings.label)
-		.attr({
+		.style({
 			"font-size":"12px",
 			"font-family":"Arial",
+			"font-weight":"bold",
 		}).attr("y",function(){
 			chartHeight = chartHeight - this.getBBox().height - settings.padding;
 			return this.getBBox().height + settings.padding + tickHeight +settings.padding;
@@ -174,9 +175,10 @@ function make_chart(div,data,settings){
 
 	if(target){
 		var targetPos = x(target.value);
-		canvas.append("text").text(target.name).attr({
+		canvas.append("text").text(target.name+" "+target.value).style({
 			"font-size":"10px",
 			"font-family":"Arial",
+			"font-weight":"bold",
 		}).attr("x", function(){
 			return targetPos+settings.padding;
 		}).attr("y",function(){
