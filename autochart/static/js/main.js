@@ -70,30 +70,6 @@ function make_chart(div,data,settings){
 		data = newData;
 	}
 
-	var blueScale = d3.scale.ordinal().range([
-		'#0b4f7d',
-		'#739bc5',
-		'#326ea4',
-		'#1b426e',
-		'#407199',
-		]);
-	var greenScale = d3.scale.ordinal().range([
-		'#256a57',
-		'#629e77',
-		'#2e7c67',
-		'#0e4a3b',
-		'#629e77',
-		'#1d5d4c',
-		]);
-	var grayScale = d3.scale.ordinal().range(['#999999']);
-	var groupScales = d3.scale.ordinal().range([greenScale, blueScale]);
-	var color = function(name, group){
-		if(!group || name.toLowerCase() == 'total'){
-			return grayScale(name);
-		}
-		return groupScales(group)(name);
-	}
-
 	var chart = div
 	chart.html("")
 	chart.width(settings.width);
@@ -102,6 +78,44 @@ function make_chart(div,data,settings){
 	var svg = d3.select(chart[0]).append("svg:svg")
 		.attr("width", chart.width())
 		.attr("height", chart.height());
+
+	var defs = svg.append("svg:defs");
+	function makeGradient(color){
+		var gradientName = 'gradient'+color.replace("#",'');
+		var gradient = defs.append("svg:linearGradient")
+		.attr("id", gradientName)
+		.attr("x1", "0%")
+		.attr("y1", "0%")
+		.attr("x2", "0%")
+		.attr("y2", "100%")
+		.attr("spreadMethod", "pad");
+
+		gradient.append("svg:stop")
+		    .attr("offset", "0%")
+		    .attr("stop-color", color)
+		    .attr("stop-opacity", 1);
+		gradient.append("svg:stop")
+		    .attr("offset", "50%")
+		    .attr("stop-color", d3.rgb(color).brighter().toString())
+		    .attr("stop-opacity", 1);
+		gradient.append("svg:stop")
+		    .attr("offset", "100%")
+		    .attr("stop-color", color)
+		    .attr("stop-opacity", 1);
+		return 'url(#'+gradientName+')';
+	}
+
+
+	var blueScale = d3.scale.ordinal().range(['#0b4f7d','#739bc5','#326ea4','#1b426e','#407199'].map(makeGradient));
+	var greenScale = d3.scale.ordinal().range(['#256a57','#629e77','#2e7c67','#0e4a3b','#629e77','#1d5d4c'].map(makeGradient));
+	var grayScale = d3.scale.ordinal().range(['#999999'].map(makeGradient));
+	var groupScales = d3.scale.ordinal().range([greenScale, blueScale]);
+	var color = function(name, group){
+		if(!group || name.toLowerCase() == 'total'){
+			return grayScale(name);
+		}
+		return groupScales(group)(name);
+	}
 
 	axis = svg.append("g");
 	canvas = svg.append("g").attr("transform", "translate(0,0)");
