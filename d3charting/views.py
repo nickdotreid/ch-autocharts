@@ -3,6 +3,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 import json
 
+import copy
+
 from django.template import RequestContext
 
 from django import forms
@@ -97,33 +99,40 @@ class SVGDownloadForm(forms.Form):
 def parse_worksheet(sheet):
     data = []
     item_keys = {}
+    current_value = {}
     for num, cell in enumerate(sheet.row(0)):
         if not cell.value:
             continue
-        if 'percent' in cell.value.lower():
-            item_keys[num] = 'percent'
-        elif 'hi' in cell.value.lower():
-            item_keys[num] = 'high'
-        elif 'lo' in cell.value.lower():
-            item_keys[num] = 'low'
+        if cell.value.lower() in ['hi']:
+            current_value['high'] = num
+        elif cell.value.lower() in ['lo']:
+            current_value['low'] = num
         else:
-            item_keys[num] = cell.value
+            current_value = {
+                'value':num
+            }
+            name = cell.value.encode('ascii', 'ignore')
+            item_keys[name] = current_value
+
     group_num = 1
     for row_num in range(1,sheet.nrows):
         values = sheet.row(row_num)
         if not values[0].value:
             group_num += 1
             continue
-        d = {
-            'name':values[0].value.encode('ascii', 'ignore'),
-            'group':group_num,
-        }
         for key in item_keys:
-            if item_keys[key] in ['low', 'high', 'percent'] and not values[key].value:
-                d[item_keys[key]] = 0
-            else:
-                d[item_keys[key]] = values[key].value
-        data.append(d)
+            d = {
+                'name':values[0].value.encode('ascii', 'ignore'),
+                'group':group_num,
+            }
+            key_values = item_keys[key]
+            d['value_name'] = key
+            d['value'] = values[key_values['value']].value
+            if 'high' in key_values:
+                d['high'] = values[key_values['high']].value
+            if 'low' in key_values:
+                d['low'] = values[key_values['low']].value
+            data.append(d)
     return data
 
 def index(request):

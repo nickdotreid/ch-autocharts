@@ -118,10 +118,16 @@ function make_chart(div,data,settings){
 	chartWidth = settings.width - yAxisWidth - settings.padding - settings.padding;
 	
 	if(!settings.min){
-		settings.min = d3.min(data, function(d){ return d.low; });
+		settings.min = d3.min(data, function(d){ 
+			if(d.low) return d.low;
+			return d.value;
+		});
 	}
 	if(!settings.max){
-		settings.max = d3.max(data, function(d){ return d.high; });
+		settings.max = d3.max(data, function(d){
+			if(d.high) return d.high;
+			return d.value;
+		});
 	}
 	var x = d3.scale.linear().domain([
 		settings.min,
@@ -167,7 +173,7 @@ function make_chart(div,data,settings){
 	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight).attr("stroke","gray").attr("stroke-width","1");
 
 	if(target){
-		var targetPos = x(target.percent);
+		var targetPos = x(target.value);
 		canvas.append("text").text(target.name).attr({
 			"font-size":"10px",
 			"font-family":"Arial",
@@ -212,30 +218,33 @@ function make_chart(div,data,settings){
 		ypos += barHeight;
 		return translate;
 	}).append("rect").attr("height",barHeight).attr("width",function(d){
-		return x(d.percent)
+		return x(d.value)
 	}).attr("fill", function(d){
 		return color(d.name, String(d.group));
-	});	
-	bars.append("line").attr("x1",function(d){
-		return x(d.low);
-	}).attr("x2", function(d){
-		return x(d.high);
-	}).attr("y1", barHeight/2).attr("y2",barHeight/2)
-	.attr("stroke","black").attr("stroke-width","1");
+	});
 
-	bars.append("line").attr("x1",function(d){
-		return x(d.low);
-	}).attr("x2", function(d){
-		return x(d.low);
-	}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
-	.attr("stroke","black").attr("stroke-width","1");
-	
-	bars.append("line").attr("x1",function(d){
-		return x(d.high);
-	}).attr("x2", function(d){
-		return x(d.high);
-	}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
-	.attr("stroke","black").attr("stroke-width","1");
+	if(true){ // draw error margins if there is data
+		bars.append("line").attr("x1",function(d){
+			return x(d.low);
+		}).attr("x2", function(d){
+			return x(d.high);
+		}).attr("y1", barHeight/2).attr("y2",barHeight/2)
+		.attr("stroke","black").attr("stroke-width","1");
+
+		bars.append("line").attr("x1",function(d){
+			return x(d.low);
+		}).attr("x2", function(d){
+			return x(d.low);
+		}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
+		.attr("stroke","black").attr("stroke-width","1");
+		
+		bars.append("line").attr("x1",function(d){
+			return x(d.high);
+		}).attr("x2", function(d){
+			return x(d.high);
+		}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
+		.attr("stroke","black").attr("stroke-width","1");
+	}
 
 	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
 
