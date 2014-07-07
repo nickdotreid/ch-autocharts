@@ -38,7 +38,7 @@ $(document).ready(function(){
 
 function make_chart(div,data,settings){
 	defaultSettings = {
-		'width':650,
+		'width':680,
 		'height':350,
 		'padding':5,
 		'min':false,
@@ -70,12 +70,25 @@ function make_chart(div,data,settings){
 		data = newData;
 	}
 
-	var blueScale = d3.scale.ordinal().range(['rgb(198,219,239)','rgb(158,202,225)','rgb(107,174,214)','rgb(66,146,198)','rgb(33,113,181)','rgb(8,81,156)','rgb(8,48,107)']);
-	var greenScale = d3.scale.ordinal().range(['rgb(199,233,192)','rgb(161,217,155)','rgb(116,196,118)','rgb(65,171,93)','rgb(35,139,69)','rgb(0,109,44)','rgb(0,68,27)']);
-	var grayScale = d3.scale.ordinal().range(['rgb(217,217,217)','rgb(189,189,189)','rgb(150,150,150)','rgb(99,99,99)','rgb(37,37,37)']);
-	var groupScales = d3.scale.ordinal().range([blueScale, greenScale]);
+	var blueScale = d3.scale.ordinal().range([
+		'#0b4f7d',
+		'#739bc5',
+		'#326ea4',
+		'#1b426e',
+		'#407199',
+		]);
+	var greenScale = d3.scale.ordinal().range([
+		'#256a57',
+		'#629e77',
+		'#2e7c67',
+		'#0e4a3b',
+		'#629e77',
+		'#1d5d4c',
+		]);
+	var grayScale = d3.scale.ordinal().range(['#999999']);
+	var groupScales = d3.scale.ordinal().range([greenScale, blueScale]);
 	var color = function(name, group){
-		if(!group){
+		if(!group || name.toLowerCase() == 'total'){
 			return grayScale(name);
 		}
 		return groupScales(group)(name);
@@ -192,7 +205,7 @@ function make_chart(div,data,settings){
 	if(target){
 		var targetPos = x(target.value);
 		canvas.append("text").text(target.name+" "+target.value).style({
-			"font-size":"10px",
+			"font-size":"15px",
 			"font-family":"Arial",
 			"font-weight":"bold",
 		}).attr("x", function(){
@@ -205,7 +218,7 @@ function make_chart(div,data,settings){
 			"x2":targetPos,
 			"y1":0,
 			"y2":0-chartHeight,
-		}).attr("stroke","black").attr("stroke-width","1").attr("stroke-dasharray","4,2");
+		}).attr("stroke","black").attr("stroke-width","3").attr("stroke-dasharray","4,2");
 
 	}
 
