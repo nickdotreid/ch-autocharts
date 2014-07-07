@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 
+{% block navigation %}
+	{{block.super}}
+	<form class="download-all pull-right" action="{% url 'd3charting.views.save_all' %}" method="post">
+		{% csrf_token %}
+		<input type="submit" value="Download All" class="btn btn-primary" />
+	</form>
+{% endblock navigation %}
+
 {% block content %}
 	<script type="text/javascript">
 		var data = {};

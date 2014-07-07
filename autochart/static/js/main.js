@@ -17,6 +17,18 @@ $.fn.serializeObject = function()
 };
 
 $(document).ready(function(){
+	$('form.download-all').submit(function(event){
+		var form = $(this);
+		$('input[type=hidden]:not([name=csrfmiddlewaretoken])',form).remove();
+
+		$('form:not(.download-all)').each(function(){
+			var obj = $(this).serializeObject();
+			var input = $('<input type="hidden" />').appendTo(form);
+			input.attr('name',obj['filename']);
+			input.attr('value',obj['svg']);
+		});
+	});
+
 	$(".chart").each(function(){
 		var chart = $(this);
 		var form = $('form',chart.parents('.row'));

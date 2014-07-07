@@ -3,7 +3,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 import json
 
-import copy
+from StringIO import StringIO  
+from zipfile import ZipFile
 
 from django.template import RequestContext
 
@@ -179,4 +180,31 @@ def save(request):
         return response
     response = HttpResponse(form.cleaned_data['svg'],mimetype="image/svg")
     response['Content-Disposition'] = 'attachment; filename="%s.svg"' % (filename)
+    return response
+
+def save_all(request):
+    if not request.POST and not request.is_ajax:
+        return HttpResponseRedirect(reverse(index))
+
+    in_memory = StringIO()  
+    zip = ZipFile(in_memory, "a")
+
+    for name in request.POST:
+        if name == 'csrfmiddlewaretoken':
+            continue
+        svg_data = request.POST[name]
+        zip.writestr("%s.svg" % (name), cairosvg.svg2svg(svg_data))
+        zip.writestr("%s.png" % (name), cairosvg.svg2png(svg_data))
+
+    # fix for Linux zip files read in Windows  (I dont know what this actually does)
+    for file in zip.filelist:  
+        file.create_system = 0 
+    zip.close()
+
+    response = HttpResponse(mimetype="application/zip")  
+    response["Content-Disposition"] = "attachment; filename=charts.zip"  
+      
+    in_memory.seek(0)      
+    response.write(in_memory.read())  
+
     return response
