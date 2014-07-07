@@ -36,17 +36,19 @@ class ExcelUploadForm(forms.Form):
 
     file = forms.FileField(required=True)
 
-class SVGDownloadForm(forms.Form):
-    filename = forms.CharField(widget=forms.HiddenInput)
-    filetype = forms.ChoiceField(choices=(
+EXPORT_TYPES = (
         ('svg','SVG'),
         ('png','PNG'),
-        ))
+        )
+
+class SVGDownloadForm(forms.Form):
+    filename = forms.CharField(widget=forms.HiddenInput)
+    filetype = forms.ChoiceField(choices=EXPORT_TYPES)
     svg = forms.CharField(widget=forms.HiddenInput)
 
 class SpecialSVGDownloadForm(SVGDownloadForm):
-    def __init__(self, post_vars={}, targets=[], *args, **kwargs):
-        super(SpecialSVGDownloadForm, self).__init__(post_vars,*args, **kwargs)
+    def __init__(self, data=None, targets=[], *args, **kwargs):
+        super(SpecialSVGDownloadForm, self).__init__(data ,*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_id = "svgform"
         self.helper.form_method = "POST"
@@ -100,43 +102,50 @@ class SpecialSVGDownloadForm(SVGDownloadForm):
     label = forms.CharField(required=False, label="Axis label")
 
 def parse_worksheet(sheet):
+    metadata = {
+        'filetype':EXPORT_TYPES[0][0],
+    }
     data = []
     item_keys = {}
     current_value = {}
-    for num, cell in enumerate(sheet.row(0)):
-        if not cell.value:
-            continue
-        if cell.value.lower() in ['hi']:
-            current_value['high'] = num
-        elif cell.value.lower() in ['lo']:
-            current_value['low'] = num
-        else:
-            current_value = {
-                'value':num
-            }
-            name = cell.value.encode('ascii', 'ignore')
-            item_keys[name] = current_value
+    group_num = 0
 
-    group_num = 1
-    for row_num in range(1,sheet.nrows):
+    for row_num in range(0,sheet.nrows):
         values = sheet.row(row_num)
-        if not values[0].value:
-            group_num += 1
-            continue
-        for key in item_keys:
-            d = {
-                'name':values[0].value.encode('ascii', 'ignore'),
-                'group':group_num,
-            }
-            key_values = item_keys[key]
-            d['value_name'] = key
-            d['value'] = values[key_values['value']].value
-            if 'high' in key_values:
-                d['high'] = values[key_values['high']].value
-            if 'low' in key_values:
-                d['low'] = values[key_values['low']].value
-            data.append(d)
-    return data
+        if not values[0].value and values[1].value and len(item_keys.keys()) < 1:
+            for num, cell in enumerate(values):
+                if not cell.value:
+                    continue
+                if cell.value.lower() in ['hi']:
+                    current_value['high'] = num
+                elif cell.value.lower() in ['lo']:
+                    current_value['low'] = num
+                else:
+                    current_value = {
+                        'value':num
+                    }
+                    name = cell.value.encode('ascii', 'ignore')
+                    item_keys[name] = current_value
+        elif len(item_keys) < 1:
+            metadata[values[0].value] = values[1].value
+        else:
+            if not values[0].value:
+                group_num += 1
+                continue
+            for key in item_keys:
+                d = {
+                    'name':values[0].value.encode('ascii', 'ignore'),
+                    'group':group_num,
+                }
+                key_values = item_keys[key]
+                d['value_name'] = key
+                d['value'] = values[key_values['value']].value
+                if 'high' in key_values:
+                    d['high'] = values[key_values['high']].value
+                if 'low' in key_values:
+                    d['low'] = values[key_values['low']].value
+                data.append(d)
+    return data, metadata
 
 def index(request):
     form = ExcelUploadForm()
@@ -149,12 +158,12 @@ def index(request):
 
             charts = []
             for name in book.sheet_names():
-                data = parse_worksheet(book.sheet_by_name(name))
+                data, metadata = parse_worksheet(book.sheet_by_name(name))
                 keys = [d['name'] for d in data]
                 charts.append({
                     'name':name,
                     'data':data,
-                    'form':SpecialSVGDownloadForm(targets=keys),
+                    'form':SpecialSVGDownloadForm(metadata, targets=keys),
                     })
             return render_to_response('charts.html',{
                 'charts':charts,
@@ -192,9 +201,13 @@ def save_all(request):
     for name in request.POST:
         if name == 'csrfmiddlewaretoken':
             continue
-        svg_data = request.POST[name]
-        zip.writestr("%s.svg" % (name), cairosvg.svg2svg(svg_data))
-        zip.writestr("%s.png" % (name), cairosvg.svg2png(svg_data))
+        try:
+            svg_data = request.POST[name]
+            zip.writestr("%s.svg" % (name), cairosvg.svg2svg(svg_data))
+            zip.writestr("%s.png" % (name), cairosvg.svg2png(svg_data))
+        except:
+            print name + " broke while running"
+            pass
 
     # fix for Linux zip files read in Windows  (I dont know what this actually does)
     for file in zip.filelist:  
