@@ -72,6 +72,7 @@ class SVGDownloadForm(forms.Form):
                 css_class="row",
                 ),
             'filetype',
+            'filename',
             'svg',
             Submit('submit', 'Download'),
             )
@@ -86,6 +87,7 @@ class SVGDownloadForm(forms.Form):
     max = forms.CharField(required = False, label="Max axis")
     ticks = forms.CharField(required = False, label="# of ticks")
     label = forms.CharField(required=False, label="Axis label")
+    filename = forms.CharField(widget=forms.HiddenInput)
     filetype = forms.ChoiceField(choices=(
         ('svg','SVG'),
         ('png','PNG'),
@@ -158,11 +160,12 @@ def save(request):
     form = SVGDownloadForm(request.POST)
     if not form.is_valid():
         return HttpResponseRedirect(reverse(index))
+    filename = form.cleaned_data['filename']
     if form.cleaned_data['filetype'] == 'png':
         image_data = cairosvg.svg2png(form.cleaned_data['svg'])
         response = HttpResponse(image_data, mimetype="image/png")
-        response['Content-Disposition'] = 'attachment; filename="foo.png"'
+        response['Content-Disposition'] = 'attachment; filename="%s.png"' % (filename)
         return response
     response = HttpResponse(form.cleaned_data['svg'],mimetype="image/svg")
-    response['Content-Disposition'] = 'attachment; filename="foo.svg"'
+    response['Content-Disposition'] = 'attachment; filename="%s.svg"' % (filename)
     return response

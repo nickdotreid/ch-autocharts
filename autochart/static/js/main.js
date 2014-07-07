@@ -20,6 +20,7 @@ $(document).ready(function(){
 	$(".chart").each(function(){
 		var chart = $(this);
 		var form = $('form',chart.parents('.row'));
+		$('input[name=filename]',form).val(chart.data('name'));
 		if(form.serializeObject()['formtype'] == 'vertical'){
 			make_vertical_chart(chart,data[chart.data("name")],form.serializeObject());
 		}else{
