@@ -36,8 +36,16 @@ class ExcelUploadForm(forms.Form):
     file = forms.FileField(required=True)
 
 class SVGDownloadForm(forms.Form):
+    filename = forms.CharField(widget=forms.HiddenInput)
+    filetype = forms.ChoiceField(choices=(
+        ('svg','SVG'),
+        ('png','PNG'),
+        ))
+    svg = forms.CharField(widget=forms.HiddenInput)
+
+class SpecialSVGDownloadForm(SVGDownloadForm):
     def __init__(self, post_vars={}, targets=[], *args, **kwargs):
-        super(SVGDownloadForm, self).__init__(post_vars,*args, **kwargs)
+        super(SpecialSVGDownloadForm, self).__init__(post_vars,*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_id = "svgform"
         self.helper.form_method = "POST"
@@ -89,12 +97,6 @@ class SVGDownloadForm(forms.Form):
     max = forms.CharField(required = False, label="Max axis")
     ticks = forms.CharField(required = False, label="# of ticks")
     label = forms.CharField(required=False, label="Axis label")
-    filename = forms.CharField(widget=forms.HiddenInput)
-    filetype = forms.ChoiceField(choices=(
-        ('svg','SVG'),
-        ('png','PNG'),
-        ))
-    svg = forms.CharField(widget=forms.HiddenInput)
 
 def parse_worksheet(sheet):
     data = []
@@ -151,7 +153,7 @@ def index(request):
                 charts.append({
                     'name':name,
                     'data':data,
-                    'form':SVGDownloadForm(targets=keys),
+                    'form':SpecialSVGDownloadForm(targets=keys),
                     })
             return render_to_response('charts.html',{
                 'charts':charts,
