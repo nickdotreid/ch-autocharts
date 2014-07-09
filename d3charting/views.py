@@ -116,15 +116,19 @@ def parse_worksheet(sheet):
             for num, cell in enumerate(values):
                 if not cell.value:
                     continue
-                if cell.value.lower() in ['hi']:
+                cell_value = cell.value
+                if type(cell_value) in [float, int]:
+                    cell_value = unicode(int(cell_value))
+                cell_value = cell_value.encode('ascii', 'ignore')
+                if cell_value.lower() in ['hi']:
                     current_value['high'] = num
-                elif cell.value.lower() in ['lo']:
+                elif cell_value.lower() in ['lo']:
                     current_value['low'] = num
                 else:
                     current_value = {
                         'value':num
                     }
-                    name = cell.value.encode('ascii', 'ignore')
+                    name = cell_value
                     item_keys[name] = current_value
         elif len(item_keys) < 1:
             metadata[values[0].value] = values[1].value
@@ -138,7 +142,7 @@ def parse_worksheet(sheet):
                     'group':group_num,
                 }
                 key_values = item_keys[key]
-                d['value_name'] = key
+                d['label'] = key
                 d['value'] = values[key_values['value']].value
                 if 'high' in key_values:
                     d['high'] = values[key_values['high']].value
