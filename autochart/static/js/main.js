@@ -331,6 +331,13 @@ function make_vertical_chart(div,data,settings){
 		}
 	}
 
+	if(!settings.min){
+		settings.min = d3.min(data, function(d){ return d.low; });
+	}
+	if(!settings.max){
+		settings.max = d3.max(data, function(d){ return d.high; });
+	}
+
 	var target = false;
 	if(settings.target){
 		var newData = []
@@ -370,8 +377,10 @@ function make_vertical_chart(div,data,settings){
 
 	// figure out y-axis width
 	// Add label
+	var label = false;
+	var yAxisWidth = settings.padding+0;
 	if(settings.label){
-		yaxis.append("text").text(settings.label)
+		label = yaxis.append("text").text(settings.label)
 		.attr({
 			"font-size":"12px",
 			"font-family":"Arial",
@@ -381,92 +390,41 @@ function make_vertical_chart(div,data,settings){
 				return 0 - settings.height/2 - this.getBBox().width/2;
 			},
 			"y":function(){
+				yAxisWidth += this.getBBox().height + settings.padding;
 				return settings.padding + this.getBBox().height;
 			},
 		});
 	}
 	// Make ticks
+	var y = d3.scale.linear().domain([settings.min,settings.max]);
+	var ticks = y.ticks(settings.ticks);
 
-
-
-	var ypos = 0;
-	last_group = 0;
-	var bars = canvas.selectAll("g").data(data).enter()
-	.append("g");
-
-	bars.append("text").text(function(d){
-		return d.name;
-	}).attr({
-		"font-size":"10px",
-		"font-family":"Arial",
-		"font-style":"Bold",
-	}).attr("x",function(){
-		return -settings.padding-this.getBBox().width;
-	}).attr("y",function(){
-		return this.getBBox().height;
-	});
-
-	yAxisWidth = d3.max(bars[0],function(d){
-		return d.children[0].getBBox().width;
-	});
-
-	chartWidth = settings.width - yAxisWidth - settings.padding - settings.padding;
-	
-	if(!settings.min){
-		settings.min = d3.min(data, function(d){ return d.low; });
-	}
-	if(!settings.max){
-		settings.max = d3.max(data, function(d){ return d.high; });
-	}
-	var x = d3.scale.linear().domain([
-		settings.min,
-		settings.max
-		]).range([0,chartWidth]);
-
-	// figure out x-axis height
-	ticks = x.ticks(settings.ticks);
-	axis.append("line").attr("x1",0).attr("x2",chartWidth).attr("y1",0).attr("y2",0).attr("stroke","gray").attr("stroke-width","1");
-	var tickMarks = axis.selectAll("g").data(ticks).enter().append("g").attr("transform", function(d){
-		return "translate("+x(d)+",0)";
-	});
+	var tickMarks = yaxis.selectAll("g").data(ticks).enter().append("g");
 	tickMarks.append("text").text(function(d){ return d; }).attr({
 		"font-size":"10px",
 		"font-family":"Arial",
 	}).attr("x",function(){
-		return 0-this.getBBox().width/2;
+		return yAxisWidth;
 	}).attr("y",function(){
-		return this.getBBox().height + 5;
+		return -this.getBBox().height/2;
 	});
+	// find widest tick
+	var tickWidth = d3.max(tickMarks[0],function(d){
+		return d.children[0].getBBox().width;
+	});
+	yAxisWidth += tickWidth + settings.padding;
 
-	// find tallest tick
-	var tickHeight = d3.max(tickMarks[0],function(d){
-		return d.children[0].getBBox().height;
-	})
+	// offset all ticks to line up with yAxis line
 
-	var chartHeight = settings.height - tickHeight - settings.padding
-
-	axis.attr("transform", function(){ return "translate("+yAxisWidth+","+chartHeight+")"; });
-	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight).attr("stroke","gray").attr("stroke-width","1");
-
-	if(target){
-		var targetPos = x(target.percent);
-		canvas.append("text").text(target.name).attr({
-			"font-size":"10px",
-			"font-family":"Arial",
-		}).attr("x", function(){
-			return targetPos+settings.padding;
-		}).attr("y",function(){
-			return this.getBBox().height;
-		});
-		axis.append("line").attr({
-			"x1":targetPos,
-			"x2":targetPos,
-			"y1":0,
-			"y2":0-chartHeight,
-		}).attr("stroke","black").attr("stroke-width","1").attr("stroke-dasharray","4,2");
+	chartWidth = settings.width - yAxisWidth - settings.padding;
+	
+	xAxisHeight = 0+settings.padding;
+	// draw labels in legend
+	if(settings.labels){
 
 	}
 
+	// figure out bar width
 	var steps = 0;
 	last_group = 0;
 	data.forEach(function(d){
@@ -478,48 +436,46 @@ function make_vertical_chart(div,data,settings){
 	});
 	steps += 1; // space at bottom
 
-	barHeight = chartHeight/steps;
-	if(barHeight > settings.barSize){
-		barHeight = settings.barSize;
+	barWidth = chartWidth/steps;
+	if(barWidth > settings.barSize){
+		barWidth = settings.barSize;
 	}
 
+
+	// draw bar/grouping labels
+	var xpos = 0;
 	last_group = 0;
-	ypos = 0;
-	bars.attr("transform",function(d){
+	var bars = canvas.selectAll("g").data(data).enter()
+	.append("g").attr("transform",function(d){
 		if(d.group != last_group){
 			last_group = d.group;
-			ypos += barHeight;
+			xpos += barWidth;
 		}
-		var translate = "translate(0,"+ypos+")";
-		ypos += barHeight;
+		var translate = "translate("+(xpos+barWidth/2)+",0)";
+		xpos += barWidth;
 		return translate;
-	}).append("rect").attr("height",barHeight).attr("width",function(d){
-		return x(d.percent)
-	}).attr("fill", function(d){
-		return color(d.name, String(d.group));
-	});	
-	bars.append("line").attr("x1",function(d){
-		return x(d.low);
-	}).attr("x2", function(d){
-		return x(d.high);
-	}).attr("y1", barHeight/2).attr("y2",barHeight/2)
-	.attr("stroke","black").attr("stroke-width","1");
+	});
 
-	bars.append("line").attr("x1",function(d){
-		return x(d.low);
-	}).attr("x2", function(d){
-		return x(d.low);
-	}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
-	.attr("stroke","black").attr("stroke-width","1");
+	bars.append("text").text(function(d){
+		return d.name;
+	}).style({
+		"font-size":"10px",
+		"font-family":"Arial",
+		"font-weight":"Bold",
+	}).attr("x",function(){
+		return -this.getBBox().width/2;
+	}).attr("y",settings.padding);
 	
-	bars.append("line").attr("x1",function(d){
-		return x(d.high);
-	}).attr("x2", function(d){
-		return x(d.high);
-	}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
-	.attr("stroke","black").attr("stroke-width","1");
+	// get tallest label
+	var barNameHeight = d3.max(bars[0], function(d){
+		return d.children[0].getBBox().height;
+	});
+	xAxisHeight += barNameHeight + settings.padding;
 
-	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
+	// translate canvas down
+	canvas.attr("transform","translate("+yAxisWidth+","+(settings.height-xAxisHeight)+")")
+	// 
+
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
