@@ -406,7 +406,7 @@ function make_vertical_chart(div,data,settings){
 	}).attr("x",function(){
 		return yAxisWidth;
 	}).attr("y",function(){
-		return -this.getBBox().height/2;
+		return this.getBBox().height/2;
 	});
 	// find widest tick
 	var tickWidth = d3.max(tickMarks[0],function(d){
@@ -427,9 +427,14 @@ function make_vertical_chart(div,data,settings){
 	// figure out bar width
 	var steps = 0;
 	last_group = 0;
+	last_name = data[0].name;
 	data.forEach(function(d){
 		if(d.group != last_group){
 			last_group = d.group;
+			steps += 1;
+		}
+		if(settings.labels.length > 1 && d.name != last_name){
+			last_name = d.name;
 			steps += 1;
 		}
 		steps +=1;
@@ -438,43 +443,115 @@ function make_vertical_chart(div,data,settings){
 
 	barWidth = chartWidth/steps;
 	if(barWidth > settings.barSize){
-		barWidth = settings.barSize;
+//		barWidth = settings.barSize;
 	}
 
+	var names = [];
+	data.forEach(function(d){
+		if(names.indexOf(d.name) == -1){
+			names.push(d.name);
+		}
+	});
+	var nameLocations = {}; // oh this is ugly....
 
 	// draw bar/grouping labels
 	var xpos = 0;
 	last_group = 0;
+	last_name = data[0].name;
 	var bars = canvas.selectAll("g").data(data).enter()
 	.append("g").attr("transform",function(d){
 		if(d.group != last_group){
 			last_group = d.group;
 			xpos += barWidth;
 		}
+		if(settings.labels.length > 1 && d.name != last_name){
+			last_name = d.name;
+			xpos += barWidth;
+		}
+		if(!nameLocations[d.name]) nameLocations[d.name] = {'start':xpos };
 		var translate = "translate("+(xpos+barWidth/2)+",0)";
 		xpos += barWidth;
+		nameLocations[d.name]['end'] = xpos;
+		nameLocations[d.name]['width'] = nameLocations[d.name]['end'] - nameLocations[d.name]['start'];
+		nameLocations[d.name]['middle'] = nameLocations[d.name]['start'] + nameLocations[d.name]['width']/2;
 		return translate;
 	});
 
-	bars.append("text").text(function(d){
-		return d.name;
-	}).style({
-		"font-size":"10px",
-		"font-family":"Arial",
-		"font-weight":"Bold",
-	}).attr("x",function(){
-		return -this.getBBox().width/2;
-	}).attr("y",settings.padding);
-	
+	var nameLabels = [[]];
+	if(settings.labels.length > 1){
+		nameLabels = canvas.selectAll("text").data(names).enter()
+		.append("text").text(function(d){
+			return d;
+		}).attr("text-anchor","middle")
+		.style({
+			"font-size":"10px",
+			"font-family":"Arial",
+			"font-weight":"Bold",
+		}).attr("x",function(d){
+			return nameLocations[d]['middle'];
+		}).attr("width",function(d){
+			return nameLocations[d]['width'];
+		});
+	}else{
+		nameLabels = bars.append("text").text(function(d){
+			return d.name;
+		}).style({
+			"font-size":"10px",
+			"font-family":"Arial",
+			"font-weight":"Bold",
+		}).attr("x",function(){
+			return -this.getBBox().width/2;
+		}).attr("y",function(d){
+			return settings.padding + this.getBBox().height;
+		});
+	}
+
 	// get tallest label
-	var barNameHeight = d3.max(bars[0], function(d){
-		return d.children[0].getBBox().height;
+	var barNameHeight = d3.max(nameLabels[0], function(d){
+		return d.getBBox().height;
 	});
 	xAxisHeight += barNameHeight + settings.padding;
 
+	var chartHeight = settings.height - xAxisHeight;
+
+	canvas.append("line").attr("x1",0).attr("x2",chartWidth).attr("y1",0).attr("y2",0).attr("stroke","gray").attr("stroke-width","1");
+	canvas.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight).attr("stroke","gray").attr("stroke-width","1");
 	// translate canvas down
-	canvas.attr("transform","translate("+yAxisWidth+","+(settings.height-xAxisHeight)+")")
-	// 
+	canvas.attr("transform","translate("+yAxisWidth+","+chartHeight+")")
+	
+	//Set Range
+	y.range(
+		[0,chartHeight]
+		);
+
+	// Move ticks
+	tickMarks.attr("transform",function(d){
+		return "translate(0,"+(chartHeight-y(d))+")";
+	});
+	tickMarks.append("line").attr({
+		"x1":yAxisWidth+chartWidth,
+		"x2":yAxisWidth,
+		"y1":0,
+		"y2":0,
+	}).attr("stroke","gray").attr("stroke-width","1");
+
+	// Add Bars
+	bars.append("rect").attr({
+		'x':(0-barWidth/2),
+		'width':barWidth,
+		'y':function(d){
+			return 0-y(d.value);
+		},
+		'height':function(d){
+			return y(d.value);
+		},
+		'fill':function(d){
+			if(settings.labels.length > 1){
+				return 	color(d.label,"1");
+			}
+			return color(d.name, d.group);
+		}
+	})
 
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);

@@ -117,7 +117,7 @@ def parse_worksheet(sheet):
     data = []
     item_keys = {}
     current_value = {}
-    group_num = 0
+    group_num = 1
 
     for row_num in range(0,sheet.nrows):
         values = sheet.row(row_num)
