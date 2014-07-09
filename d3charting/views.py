@@ -47,7 +47,7 @@ class SVGDownloadForm(forms.Form):
     svg = forms.CharField(widget=forms.HiddenInput)
 
 class SpecialSVGDownloadForm(SVGDownloadForm):
-    def __init__(self, data=None, targets=[], *args, **kwargs):
+    def __init__(self, data=None, targets=[], labels=[], *args, **kwargs):
         super(SpecialSVGDownloadForm, self).__init__(data ,*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_id = "svgform"
@@ -59,9 +59,17 @@ class SpecialSVGDownloadForm(SVGDownloadForm):
             target_choices.append((target,target))
         self.fields['target'] = forms.ChoiceField(required=False, choices=target_choices)
 
+        label_choices = [(l,l) for l in labels]
+        self.fields['labels'] = forms.MultipleChoiceField(
+            required=False,
+            choices=label_choices,
+            widget=forms.CheckboxSelectMultiple,
+            )
+
         self.helper.layout = Layout(
             'formtype',
             'label',
+            'labels',
             'target',
             Div(
                 Div('width', css_class="col-md-4"),
@@ -104,6 +112,7 @@ class SpecialSVGDownloadForm(SVGDownloadForm):
 def parse_worksheet(sheet):
     metadata = {
         'filetype':EXPORT_TYPES[0][0],
+        'labels':[],
     }
     data = []
     item_keys = {}
@@ -120,9 +129,9 @@ def parse_worksheet(sheet):
                 if type(cell_value) in [float, int]:
                     cell_value = unicode(int(cell_value))
                 cell_value = cell_value.encode('ascii', 'ignore')
-                if cell_value.lower() in ['hi']:
+                if cell_value.lower() in ['hi','high']:
                     current_value['high'] = num
-                elif cell_value.lower() in ['lo']:
+                elif cell_value.lower() in ['lo','low']:
                     current_value['low'] = num
                 else:
                     current_value = {
@@ -130,6 +139,7 @@ def parse_worksheet(sheet):
                     }
                     name = cell_value
                     item_keys[name] = current_value
+                    metadata['labels'].append(name)
         elif len(item_keys) < 1:
             metadata[values[0].value] = values[1].value
         else:
@@ -167,7 +177,7 @@ def index(request):
                 charts.append({
                     'name':name,
                     'data':data,
-                    'form':SpecialSVGDownloadForm(metadata, targets=keys),
+                    'form':SpecialSVGDownloadForm(metadata, targets=keys, labels=metadata['labels']),
                     })
             return render_to_response('charts.html',{
                 'charts':charts,
