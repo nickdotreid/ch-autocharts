@@ -551,8 +551,32 @@ function make_vertical_chart(div,data,settings){
 			}
 			return color(d.name, d.group);
 		}
-	})
+	});
 
+	if(true){ // draw error margins if there is data
+		
+		function getLow(d){
+			if(d.low) return 0 - y(d.low);
+			return 0 - y(d.value);
+		}
+		function getHigh(d){
+			if(d.high) return 0 - y(d.high);
+			return 0 - y(d.value);
+		}
+
+		var middle = 0;
+		var x1 = middle - barWidth/4;
+		var x2 = middle + barWidth/4;
+
+		bars.append("line").attr("y1",getLow).attr("y2",getHigh).attr("x1", middle).attr("x2",middle)
+		.attr("stroke","black").attr("stroke-width","1");
+
+		bars.append("line").attr("y1",getLow).attr("y2",getLow).attr("x1", x1).attr("x2",x2)
+		.attr("stroke","black").attr("stroke-width","1");
+		
+		bars.append("line").attr("y1",getHigh).attr("y2",getHigh).attr("x1", x1).attr("x2",x2)
+		.attr("stroke","black").attr("stroke-width","1");
+	}
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
