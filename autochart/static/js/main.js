@@ -347,8 +347,11 @@ function make_vertical_chart(div,data,settings){
 
 	var newData = []
 	data.forEach(function(d){
-		if(settings.target && d.name == settings.target){
+		if(settings.target && (d.name == settings.target)){
 			target = d;
+		}else if(settings.target && settings.labels.indexOf(d.label)==-1 && d.label == settings.target){
+			target = d;
+			target.name = d.label;
 		}else if(settings.labels.indexOf(d.label) >= 0){
 			newData.push(d);
 		}
@@ -362,7 +365,7 @@ function make_vertical_chart(div,data,settings){
 	var grayScale = d3.scale.ordinal().range(['rgb(217,217,217)','rgb(189,189,189)','rgb(150,150,150)','rgb(99,99,99)','rgb(37,37,37)']);
 	var groupScales = d3.scale.ordinal().range([blueScale, greenScale]);
 	var color = function(name, group){
-		if(!group){
+		if(!group || name == settings.target){
 			return grayScale(name);
 		}
 		return groupScales(group)(name);
@@ -406,7 +409,21 @@ function make_vertical_chart(div,data,settings){
 	var ticks = y.ticks(settings.ticks);
 
 	var tickMarks = yaxis.selectAll("g").data(ticks).enter().append("g");
-	tickMarks.append("text").text(function(d){ return d; }).attr({
+	var tickMarksHidden = false;
+	if(settings.ticks > 10){
+		tickMarksHidden = true;
+	}
+	var tickVisible = true;
+	tickMarks.append("text").text(function(d){ 
+		var text = d;
+		if(!tickVisible){
+			text = "";
+		}
+		if(tickMarksHidden){
+			tickVisible = !tickVisible;
+		}
+		return text;
+	}).attr({
 		"font-size":"10px",
 		"font-family":"Arial",
 	}).attr("x",function(){
@@ -420,13 +437,35 @@ function make_vertical_chart(div,data,settings){
 	});
 	yAxisWidth += tickWidth + settings.padding;
 
-	// offset all ticks to line up with yAxis line
+	chartWidth = settings.width - yAxisWidth - settings.padding;
+	xAxisHeight = 0+settings.padding;
 
 	// add target line
-
-	chartWidth = settings.width - yAxisWidth - settings.padding;
-	
-	xAxisHeight = 0+settings.padding;
+	if(target){
+		var targetLine = canvas.append("g");		
+		targetLine.append("text").text(function(){
+			var valStr = target.value;
+			if((settings.label && settings.label.toLowerCase().search("percent") >= 0) || target.label.toLowerCase().search("percent")){
+				valStr += "%";
+			}
+			return target.name+": "+valStr
+		}).style({
+			"font-size":"15px",
+			"font-family":"Arial",
+			"font-weight":"bold",
+		}).attr("x", function(){
+			chartWidth = chartWidth - this.getBBox().width - settings.padding;
+			return chartWidth + settings.padding;
+		}).attr("y",function(){
+			return this.getBBox().height/4;
+		});
+		targetLine.append("line").attr({
+			"x1":0,
+			"x2":chartWidth,
+			"y1":0,
+			"y2":0,
+		}).attr("stroke","black").attr("stroke-width","3").attr("stroke-dasharray","4,2");
+	}
 
 	// figure out bar width
 	var steps = 0;
@@ -515,6 +554,7 @@ function make_vertical_chart(div,data,settings){
 
 	// get tallest label
 	var barNameHeight = d3.max(nameLabels[0], function(d){
+		if(!d) return;
 		return d.getBBox().height;
 	});
 	xAxisHeight += barNameHeight + settings.padding;
@@ -572,6 +612,10 @@ function make_vertical_chart(div,data,settings){
 	y.range(
 		[0,chartHeight]
 		);
+
+	if(target){
+		targetLine.attr("transform", "translate(0,"+(0 - y(target.value))+")");
+	}
 
 	// Move ticks
 	tickMarks.attr("transform",function(d){
