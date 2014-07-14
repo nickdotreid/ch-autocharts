@@ -475,7 +475,8 @@ function make_vertical_chart(div,data,settings){
 		nameLocations[d.name]['width'] = nameLocations[d.name]['end'] - nameLocations[d.name]['start'];
 		nameLocations[d.name]['middle'] = nameLocations[d.name]['start'] + nameLocations[d.name]['width']/2;
 		return translate;
-	});
+	}).attr("data-name",function(d){ return d.name; })
+	.attr("data-label",function(d){ return d.label; });
 
 	var nameLabels = [[]];
 	if(settings.labels.length > 1){
@@ -491,7 +492,9 @@ function make_vertical_chart(div,data,settings){
 			return nameLocations[d]['middle'];
 		}).attr("width",function(d){
 			return nameLocations[d]['width'];
-		});
+		}).attr("y",function(){
+			return this.getBBox().height;
+		}).call(wrap);
 	}else{
 		nameLabels = bars.append("text").text(function(d){
 			return d.name;
@@ -580,4 +583,35 @@ function make_vertical_chart(div,data,settings){
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
+}
+
+// Modified FROM: http://bl.ocks.org/mbostock/7555321
+function wrap(text) {
+  text.each(function() {
+    var text = d3.select(this),
+    	width = text.attr("width"),
+        words = text.text().split(/\s+/).reverse(),
+        word,
+        line = [],
+        offset = 0,
+        lineHeight = 1.1, // ems
+        y = text.attr("y"),
+        x = text.attr("x"),
+        tspan = text.text(null).append("tspan").attr("x", x).attr("y", y);
+    while (word = words.pop()) {
+      line.push(word);
+      tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").text(word).attr("x", x).attr("y", y).attr("dy", function(){
+        	var rect = this.getBoundingClientRect();
+        	var height = Math.abs(rect.top - rect.bottom);
+        	offset += height;
+        	return offset;
+        });
+      }
+    }
+  });
 }
