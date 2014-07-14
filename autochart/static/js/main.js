@@ -38,7 +38,7 @@ $(document).ready(function(){
 		}else{
 			make_chart(chart,data[chart.data("name")],form.serializeObject());
 		}
-		$('input',form).change(function(){
+		$('input, select',form).change(function(){
 			if(form.serializeObject()['formtype'] == 'vertical'){
 				make_vertical_chart(chart,data[chart.data("name")],form.serializeObject());
 			}else{

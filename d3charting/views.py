@@ -55,7 +55,11 @@ class SpecialSVGDownloadForm(SVGDownloadForm):
         self.helper.form_action = reverse(save)
 
         target_choices = [("","Select a target")]
-        for target in targets:
+        targs = []
+        for target in targets+labels:
+            if target not in targs:
+                targs.append(target)
+        for target in targs:
             target_choices.append((target,target))
         self.fields['target'] = forms.ChoiceField(required=False, choices=target_choices)
 
