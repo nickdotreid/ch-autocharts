@@ -358,19 +358,6 @@ function make_vertical_chart(div,data,settings){
 	});
 	data = newData;
 
-
-
-	var blueScale = d3.scale.ordinal().range(['rgb(198,219,239)','rgb(158,202,225)','rgb(107,174,214)','rgb(66,146,198)','rgb(33,113,181)','rgb(8,81,156)','rgb(8,48,107)']);
-	var greenScale = d3.scale.ordinal().range(['rgb(199,233,192)','rgb(161,217,155)','rgb(116,196,118)','rgb(65,171,93)','rgb(35,139,69)','rgb(0,109,44)','rgb(0,68,27)']);
-	var grayScale = d3.scale.ordinal().range(['rgb(217,217,217)','rgb(189,189,189)','rgb(150,150,150)','rgb(99,99,99)','rgb(37,37,37)']);
-	var groupScales = d3.scale.ordinal().range([blueScale, greenScale]);
-	var color = function(name, group){
-		if(!group || name == settings.target){
-			return grayScale(name);
-		}
-		return groupScales(group)(name);
-	}
-
 	var chart = div
 	chart.html("")
 	chart.width(settings.width);
@@ -379,6 +366,37 @@ function make_vertical_chart(div,data,settings){
 	var svg = d3.select(chart[0]).append("svg:svg")
 		.attr("width", chart.width())
 		.attr("height", chart.height());
+
+	var defs = svg.append("svg:defs");
+	function makeGradient(color){
+		var gradientName = 'gradient'+color.replace("#",'');
+		var gradient = defs.append("svg:linearGradient")
+		.attr("id", gradientName);
+
+		gradient.append("svg:stop")
+		    .attr("offset", "0%")
+		    .attr("stop-color", color)
+		    .attr("stop-opacity", 1);
+		gradient.append("svg:stop")
+		    .attr("offset", "50%")
+		    .attr("stop-color", d3.rgb(color).brighter().toString())
+		    .attr("stop-opacity", 1);
+		gradient.append("svg:stop")
+		    .attr("offset", "100%")
+		    .attr("stop-color", color)
+		    .attr("stop-opacity", 1);
+		return 'url(#'+gradientName+')';
+	}
+
+	var blueScale = d3.scale.ordinal().range(['#0b4f7d','#739bc5','#326ea4','#1b426e','#407199'].map(makeGradient));
+	var grayScale = d3.scale.ordinal().range(['#999999'].map(makeGradient));
+	var groupScales = d3.scale.ordinal().range([blueScale]);
+	var color = function(name, group){
+		if(!group || name == settings.target){
+			return grayScale(name);
+		}
+		return groupScales(group)(name);
+	}
 
 	yaxis = svg.append("g");
 	axis = svg.append("g");
