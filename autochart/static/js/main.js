@@ -515,6 +515,48 @@ function make_vertical_chart(div,data,settings){
 	});
 	xAxisHeight += barNameHeight + settings.padding;
 
+	if(settings.labels.length > 1){
+		var rectWidth = 35;
+		var rectHeight = 20;
+
+		var label_canvas = svg.append("g");
+		var labels = label_canvas.selectAll("g").data(settings.labels).enter().append("g");
+		labels.append("rect").attr({
+			"x":0,
+			"y":0,
+			"width":rectWidth,
+			"height":rectHeight,
+			fill:function(d){
+				return color(d,"1");
+			}
+		})
+		labels.append("text").text(function(d){ return d; })
+		.style({
+			"font-size":"12px",
+			"font-family":"Arial",
+		})
+		.attr("y", function(){
+			return rectHeight/2 + this.getBBox().height/4;
+		}).attr("x",function(){
+			return settings.padding + rectWidth;
+		});
+
+		var xpos = 0;
+		labels.attr("transform",function(d){
+			var translate = "translate("+xpos+",0)";
+			xpos += this.getBBox().width + settings.padding*2;
+			return translate;
+		});
+
+		label_canvas.attr("transform",function(){
+			var xpos = settings.width/2 - this.getBBox().width/2
+			var ypos = settings.height - settings.padding - this.getBBox().height;
+			xAxisHeight += settings.padding*2 + this.getBBox().height
+			return "translate("+xpos+","+ypos+")";
+		});
+	}
+
+
 	var chartHeight = settings.height - xAxisHeight;
 
 	canvas.append("line").attr("x1",0).attr("x2",chartWidth).attr("y1",0).attr("y2",0).attr("stroke","gray").attr("stroke-width","1");
