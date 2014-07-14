@@ -115,6 +115,7 @@ def parse_worksheet(sheet):
         'labels':[],
     }
     data = []
+    keys = []
     item_keys = {}
     current_value = {}
     group_num = 1
@@ -138,6 +139,7 @@ def parse_worksheet(sheet):
                         'value':num
                     }
                     name = cell_value
+                    keys.append(name)
                     item_keys[name] = current_value
                     metadata['labels'].append(name)
         elif len(item_keys) < 1:
@@ -146,12 +148,12 @@ def parse_worksheet(sheet):
             if not values[0].value:
                 group_num += 1
                 continue
-            for key in item_keys:
+            for key in keys:
+                key_values = item_keys[key]
                 d = {
                     'name':values[0].value.encode('ascii', 'ignore'),
                     'group':group_num,
                 }
-                key_values = item_keys[key]
                 d['label'] = key
                 d['value'] = values[key_values['value']].value
                 if 'high' in key_values:
