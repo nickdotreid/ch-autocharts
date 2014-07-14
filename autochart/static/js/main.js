@@ -401,6 +401,7 @@ function make_vertical_chart(div,data,settings){
 	yaxis = svg.append("g");
 	axis = svg.append("g");
 	canvas = svg.append("g").attr("transform", "translate(0,0)");
+	barsContainer = canvas.append("g");
 
 	// figure out y-axis width
 	// Add label
@@ -519,7 +520,7 @@ function make_vertical_chart(div,data,settings){
 	var xpos = 0;
 	last_group = 0;
 	last_name = data[0].name;
-	var bars = canvas.selectAll("g").data(data).enter()
+	var bars = barsContainer.selectAll("g").data(data).enter()
 	.append("g").attr("transform",function(d){
 		if(d.group != last_group){
 			last_group = d.group;
