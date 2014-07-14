@@ -154,8 +154,12 @@ def parse_worksheet(sheet):
                 continue
             for key in keys:
                 key_values = item_keys[key]
+                row_name = values[0].value
+                if type(row_name) in [float, int]:
+                    row_name = unicode(int(row_name))
+                row_name = row_name.encode('ascii', 'ignore')
                 d = {
-                    'name':values[0].value.encode('ascii', 'ignore'),
+                    'name':row_name,
                     'group':group_num,
                 }
                 d['label'] = key
