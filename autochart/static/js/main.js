@@ -321,6 +321,7 @@ function make_vertical_chart(div,data,settings){
 		'barSize':20,
 		'label':'',
 		'target':false,
+		'labels':[],
 	}
 	if(!settings){
 		settings = {};
@@ -331,6 +332,10 @@ function make_vertical_chart(div,data,settings){
 		}
 	}
 
+	if(settings.labels && typeof settings.labels == "string"){
+		settings.labels = [settings.labels];
+	}
+
 	if(!settings.min){
 		settings.min = d3.min(data, function(d){ return d.low; });
 	}
@@ -339,17 +344,18 @@ function make_vertical_chart(div,data,settings){
 	}
 
 	var target = false;
-	if(settings.target){
-		var newData = []
-		data.forEach(function(d){
-			if(d.name == settings.target){
-				target = d;
-			}else{
-				newData.push(d);
-			}
-		});
-		data = newData;
-	}
+
+	var newData = []
+	data.forEach(function(d){
+		if(settings.target && d.name == settings.target){
+			target = d;
+		}else if(settings.labels.indexOf(d.label) >= 0){
+			newData.push(d);
+		}
+	});
+	data = newData;
+
+
 
 	var blueScale = d3.scale.ordinal().range(['rgb(198,219,239)','rgb(158,202,225)','rgb(107,174,214)','rgb(66,146,198)','rgb(33,113,181)','rgb(8,81,156)','rgb(8,48,107)']);
 	var greenScale = d3.scale.ordinal().range(['rgb(199,233,192)','rgb(161,217,155)','rgb(116,196,118)','rgb(65,171,93)','rgb(35,139,69)','rgb(0,109,44)','rgb(0,68,27)']);
@@ -416,13 +422,11 @@ function make_vertical_chart(div,data,settings){
 
 	// offset all ticks to line up with yAxis line
 
+	// add target line
+
 	chartWidth = settings.width - yAxisWidth - settings.padding;
 	
 	xAxisHeight = 0+settings.padding;
-	// draw labels in legend
-	if(settings.labels){
-
-	}
 
 	// figure out bar width
 	var steps = 0;
