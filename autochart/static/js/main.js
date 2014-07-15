@@ -311,6 +311,9 @@ function make_chart(div,data,settings){
 
 
 function make_vertical_chart(div,data,settings){
+	if(data.length < 1){
+		return ;
+	}
 	defaultSettings = {
 		'width':650,
 		'height':350,
@@ -337,10 +340,10 @@ function make_vertical_chart(div,data,settings){
 	}
 
 	if(!settings.min){
-		settings.min = d3.min(data, function(d){ return d.low; });
+		settings.min = d3.min(data, function(d){ if(d.low) return d.low; return d.value; });
 	}
 	if(!settings.max){
-		settings.max = d3.max(data, function(d){ return d.high; });
+		settings.max = d3.max(data, function(d){ if(d.high) return d.high; return d.value; });
 	}
 
 	var target = false;
@@ -445,16 +448,18 @@ function make_vertical_chart(div,data,settings){
 	}).attr({
 		"font-size":"10px",
 		"font-family":"Arial",
-	}).attr("x",function(){
-		return yAxisWidth;
 	}).attr("y",function(){
-		return this.getBBox().height/2;
+		return this.getBBox().height/4;
 	});
 	// find widest tick
 	var tickWidth = d3.max(tickMarks[0],function(d){
 		return d.children[0].getBBox().width;
 	});
 	yAxisWidth += tickWidth + settings.padding;
+
+	tickMarks.selectAll("text").attr("x",function(){
+		return yAxisWidth - settings.padding;
+	}).attr("text-anchor","end");
 
 	chartWidth = settings.width - yAxisWidth - settings.padding;
 	xAxisHeight = 0+settings.padding;
