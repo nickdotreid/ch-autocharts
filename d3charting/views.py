@@ -48,6 +48,8 @@ class SVGDownloadForm(forms.Form):
 
 class SpecialSVGDownloadForm(SVGDownloadForm):
     def __init__(self, data=None, targets=[], labels=[], *args, **kwargs):
+        if data and 'labels' not in data:
+            data['labels'] = labels
         super(SpecialSVGDownloadForm, self).__init__(data ,*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_id = "svgform"
@@ -68,6 +70,7 @@ class SpecialSVGDownloadForm(SVGDownloadForm):
             required=False,
             choices=label_choices,
             widget=forms.CheckboxSelectMultiple,
+            initial = labels,
             )
 
         self.helper.layout = Layout(
@@ -116,8 +119,8 @@ class SpecialSVGDownloadForm(SVGDownloadForm):
 def parse_worksheet(sheet):
     metadata = {
         'filetype':EXPORT_TYPES[0][0],
-        'labels':[],
     }
+    labels = []
     data = []
     keys = []
     item_keys = {}
@@ -145,9 +148,18 @@ def parse_worksheet(sheet):
                     name = cell_value
                     keys.append(name)
                     item_keys[name] = current_value
-                    metadata['labels'].append(name)
+                    labels.append(name)
         elif len(item_keys) < 1:
-            metadata[values[0].value] = values[1].value
+            k = values[0].value
+            vals = []
+            indx = 1
+            while indx<len(values) and values[indx].value and values[indx].value != '':
+                vals.append(values[indx].value)
+                indx += 1
+            if len(vals) == 1:
+                metadata[k] = vals[0]
+            elif len(vals) > 1:
+                metadata[k] = vals
         else:
             if not values[0].value:
                 group_num += 1
@@ -169,7 +181,7 @@ def parse_worksheet(sheet):
                 if 'low' in key_values:
                     d['low'] = values[key_values['low']].value
                 data.append(d)
-    return data, metadata
+    return data, metadata, labels
 
 def index(request):
     form = ExcelUploadForm()
@@ -182,12 +194,12 @@ def index(request):
 
             charts = []
             for name in book.sheet_names():
-                data, metadata = parse_worksheet(book.sheet_by_name(name))
+                data, metadata, labels = parse_worksheet(book.sheet_by_name(name))
                 keys = [d['name'] for d in data]
                 charts.append({
                     'name':name,
                     'data':data,
-                    'form':SpecialSVGDownloadForm(metadata, targets=keys, labels=metadata['labels']),
+                    'form':SpecialSVGDownloadForm(metadata, targets=keys, labels=labels),
                     })
             return render_to_response('charts.html',{
                 'charts':charts,
