@@ -144,8 +144,9 @@ function make_chart(div,data,settings){
 		"font-size":"10px",
 		"font-family":"Arial",
 		"font-weight":"Bold",
-	}).attr("x",function(){
-		return -settings.padding-this.getBBox().width;
+	}).attr("text-anchor","end")
+	.attr("x",function(){
+		return -settings.padding;
 	}).attr("y",function(){
 		return this.getBBox().height;
 	});
@@ -153,6 +154,7 @@ function make_chart(div,data,settings){
 	yAxisWidth = d3.max(bars[0],function(d){
 		return d.children[0].getBBox().width;
 	});
+	yAxisWidth += settings.padding;
 
 	chartWidth = settings.width - yAxisWidth - settings.padding - settings.padding;
 	
@@ -230,7 +232,7 @@ function make_chart(div,data,settings){
 
 	if(target){
 		var targetPos = x(target.value);
-		canvas.append("text").text(target.name+" "+target.value).style({
+		canvas.append("text").text(target.name).style({
 			"font-size":"15px",
 			"font-family":"Arial",
 			"font-weight":"bold",
@@ -467,13 +469,7 @@ function make_vertical_chart(div,data,settings){
 	// add target line
 	if(target){
 		var targetLine = canvas.append("g");		
-		targetLine.append("text").text(function(){
-			var valStr = target.value;
-			if((settings.label && settings.label.toLowerCase().search("percent") >= 0) || target.label.toLowerCase().search("percent")){
-				valStr += "%";
-			}
-			return target.name+": "+valStr
-		}).style({
+		targetLine.append("text").text(target.name).style({
 			"font-size":"15px",
 			"font-family":"Arial",
 			"font-weight":"bold",
@@ -547,7 +543,8 @@ function make_vertical_chart(div,data,settings){
 
 	var nameLabels = [[]];
 	if(settings.labels.length > 1){
-		nameLabels = canvas.selectAll("text").data(names).enter()
+		labelContainer = canvas.append("g");
+		nameLabels = labelContainer.selectAll("text").data(names).enter()
 		.append("text").text(function(d){
 			return d;
 		}).attr("text-anchor","middle")
@@ -561,7 +558,8 @@ function make_vertical_chart(div,data,settings){
 			return nameLocations[d]['width'];
 		}).attr("y",function(){
 			return this.getBBox().height;
-		}).call(wrap);
+		})
+		nameLabels.call(wrap);
 	}else{
 		nameLabels = bars.append("text").text(function(d){
 			return d.name;
@@ -582,6 +580,10 @@ function make_vertical_chart(div,data,settings){
 		return d.getBBox().height;
 	});
 	xAxisHeight += barNameHeight + settings.padding;
+
+	if(settings['labels-label']){
+		// Add secondary label and resize
+	}
 
 	if(settings.labels.length > 1){
 		var rectWidth = 35;

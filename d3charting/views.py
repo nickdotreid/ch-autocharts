@@ -153,8 +153,12 @@ def parse_worksheet(sheet):
             k = values[0].value
             vals = []
             indx = 1
-            while indx<len(values) and values[indx].value and values[indx].value != '':
-                vals.append(values[indx].value)
+            while indx<len(values) and (values[indx].value or values[indx].value == 0) and values[indx].value != '':
+                cell_value = values[indx].value
+                if type(cell_value) in [float, int]:
+                    cell_value = unicode(int(cell_value))
+                cell_value = cell_value.encode('ascii', 'ignore')
+                vals.append(cell_value)
                 indx += 1
             if len(vals) == 1:
                 metadata[k] = vals[0]
