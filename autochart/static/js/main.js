@@ -63,6 +63,9 @@ function make_chart(div,data,settings){
 	if(!settings){
 		settings = {};
 	}
+
+	if(typeof settings.labels == 'string') settings.labels = [settings.labels];
+
 	for(name in defaultSettings){
 		if(!settings[name] || settings[name]==""){
 			settings[name] = defaultSettings[name];
@@ -142,11 +145,33 @@ function make_chart(div,data,settings){
 		return 'url(#'+gradientName+')';
 	}
 
+	var blues = ['#0b4f7d','#739bc5','#326ea4','#1b426e','#407199'];
+	var greens = ['#256a57','#629e77','#2e7c67','#0e4a3b','#629e77','#1d5d4c'];
 
-	var blueScale = d3.scale.ordinal().range(['#0b4f7d','#739bc5','#326ea4','#1b426e','#407199'].map(makeGradient));
-	var greenScale = d3.scale.ordinal().range(['#256a57','#629e77','#2e7c67','#0e4a3b','#629e77','#1d5d4c'].map(makeGradient));
+	if(settings.labels.length > 1){
+		var newScale = [];
+		var mixColors = function(colorArrays){
+			shortest = d3.min(colorArrays, function(d){
+				return d.length;
+			});
+			var newArr = [];
+			for(var i=0; i < shortest; i++){
+				colorArrays.forEach(function(d){
+					newArr.push(d[i]);
+				});
+			}
+			return newArr;
+		}
+		var groupScales = d3.scale.ordinal().range([
+			d3.scale.ordinal().range(mixColors([greens,blues]).map(makeGradient))
+			]);
+	}else{
+		var blueScale = d3.scale.ordinal().range(blues.map(makeGradient));
+		var greenScale = d3.scale.ordinal().range(greens.map(makeGradient));
+		var groupScales = d3.scale.ordinal().range([greenScale, blueScale]);
+	}
+
 	var grayScale = d3.scale.ordinal().range(['#999999'].map(makeGradient));
-	var groupScales = d3.scale.ordinal().range([greenScale, blueScale]);
 	var color = function(name, group){
 		if(!group || name.toLowerCase() == 'total'){
 			return grayScale(name);
@@ -225,7 +250,56 @@ function make_chart(div,data,settings){
 		return d.children[0].getBBox().height;
 	})
 
-	var chartHeight = settings.height - tickHeight - settings.padding
+	var xAxisHeight = tickHeight + settings.padding;
+
+	if(settings.labels.length > 1){
+		var rectWidth = 35;
+		var rectHeight = 20;
+
+		var label_canvas = svg.append("g");
+		var labels = label_canvas.selectAll("g").data(settings.labels).enter().append("g");
+		labels.append("rect").attr({
+			"x":0,
+			"y":0,
+			"width":rectWidth,
+			"height":rectHeight,
+			fill:function(d){
+				return color(d,"1");
+			}
+		})
+		labels.append("text").text(function(d){ return d; })
+		.style({
+			"font-size":"12px",
+			"font-family":"Arial",
+		})
+		.attr("y", function(){
+			return rectHeight/2 + this.getBBox().height/4;
+		}).attr("x",function(){
+			return settings.padding + rectWidth;
+		});
+
+		var xpos = 0;
+		var ypos = 0;
+		labels.attr("transform",function(d){
+			var labelWidth = this.getBBox().width + settings.padding*2
+			if(xpos + labelWidth > chartWidth){
+				xpos = 0;
+				ypos += rectHeight + settings.padding*2;
+			}
+			var translate = "translate("+xpos+","+ypos+")";
+			xpos += labelWidth;
+			return translate;
+		});
+
+		label_canvas.attr("transform",function(){
+			var xpos = settings.width/2 - this.getBBox().width/2
+			var ypos = settings.height - settings.padding - this.getBBox().height;
+			xAxisHeight += settings.padding*2 + this.getBBox().height
+			return "translate("+xpos+","+ypos+")";
+		});
+	}
+
+	var chartHeight = settings.height - xAxisHeight;
 
 	if(settings.label){
 		axis.append("text").text(settings.label)
@@ -272,7 +346,7 @@ function make_chart(div,data,settings){
 			last_group = d.group;
 			steps += 1;
 		}
-		if(d.name != last_name){
+		if(settings.labels && settings.labels.length > 1 && d.name != last_name){
 			last_name = d.name;
 			steps += 1;
 		}
@@ -295,7 +369,7 @@ function make_chart(div,data,settings){
 			last_group = d.group;
 			ypos += barHeight;
 		}
-		if(d.name != last_name){
+		if(settings.labels && settings.labels.length > 1 && d.name != last_name){
 			last_name = d.name;
 			ypos += barHeight;
 		}
@@ -322,28 +396,32 @@ function make_chart(div,data,settings){
 		return nameLocations[d]['middle'] - this.getBBox().height/4;
 	});
 
-	if(true){ // draw error margins if there is data
-		bars.append("line").attr("x1",function(d){
+
+	bars.each(function(d){
+		var bar = d3.select(this);
+		if(d.label == settings.target) return;
+		if(!d.low || !d.high) return;
+
+		function getLow(d){
 			return x(d.low);
-		}).attr("x2", function(d){
+		}
+		function getHigh(d){
 			return x(d.high);
-		}).attr("y1", barHeight/2).attr("y2",barHeight/2)
+		}
+
+		var middle = barHeight/2;
+		var x1 = middle - barHeight/4;
+		var x2 = middle + barHeight/4;
+
+		bar.append("line").attr("x1",getLow).attr("x2",getHigh).attr("y1", middle).attr("y2",middle)
 		.attr("stroke","black").attr("stroke-width","1");
 
-		bars.append("line").attr("x1",function(d){
-			return x(d.low);
-		}).attr("x2", function(d){
-			return x(d.low);
-		}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
+		bar.append("line").attr("x1",getLow).attr("x2",getLow).attr("y1", x1).attr("y2",x2)
 		.attr("stroke","black").attr("stroke-width","1");
 		
-		bars.append("line").attr("x1",function(d){
-			return x(d.high);
-		}).attr("x2", function(d){
-			return x(d.high);
-		}).attr("y1", (barHeight/2)-(barHeight/4)).attr("y2",(barHeight/2)+(barHeight/4))
+		bar.append("line").attr("x1",getHigh).attr("x2",getHigh).attr("y1", x1).attr("y2",x2)
 		.attr("stroke","black").attr("stroke-width","1");
-	}
+	});
 
 	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
 
@@ -357,7 +435,7 @@ function make_vertical_chart(div,data,settings){
 		return ;
 	}
 	defaultSettings = {
-		'width':650,
+		'width':680,
 		'height':350,
 		'padding':5,
 		'min':false,
