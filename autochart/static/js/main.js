@@ -69,6 +69,19 @@ function make_chart(div,data,settings){
 		}
 	}
 
+	if(!settings.min){
+		settings.min = d3.min(data, function(d){ 
+			if(d.low) return d.low;
+			return d.value;
+		});
+	}
+	if(!settings.max){
+		settings.max = d3.max(data, function(d){
+			if(d.high) return d.high;
+			return d.value;
+		});
+	}
+
 	var target = false;
 	if(settings.target){
 		var newData = []
@@ -81,6 +94,18 @@ function make_chart(div,data,settings){
 		});
 		data = newData;
 	}
+
+	var nameProperty = "label";
+	if(settings.labels && settings.labels.length > 1){
+		nameProperty = "name";
+	}
+
+	var names = [];
+	data.forEach(function(d){
+		if(names.indexOf(d[nameProperty]) == -1){
+			names.push(d[nameProperty]);
+		}
+	});
 
 	var chart = div
 	chart.html("")
@@ -129,17 +154,13 @@ function make_chart(div,data,settings){
 		return groupScales(group)(name);
 	}
 
-	axis = svg.append("g");
-	canvas = svg.append("g").attr("transform", "translate(0,0)");
-
-	// figure out y-axis width
-	var ypos = 0;
-	last_group = 0;
-	var bars = canvas.selectAll("g").data(data).enter()
-	.append("g");
-
-	bars.append("text").text(function(d){
-		return d.name;
+	var axis = svg.append("g");
+	var canvas = svg.append("g").attr("transform", "translate(0,0)");
+	var yAxis = canvas.append("g").attr("class","yaxis");
+	// Make y-axis
+	var yAxisLabels = yAxis.selectAll("text").data(names).enter()
+	.append("text").text(function(d){
+		return d;
 	}).style({
 		"font-size":"10px",
 		"font-family":"Arial",
@@ -151,25 +172,18 @@ function make_chart(div,data,settings){
 		return this.getBBox().height;
 	});
 
-	yAxisWidth = d3.max(bars[0],function(d){
-		return d.children[0].getBBox().width;
+	yAxisWidth = d3.max(yAxisLabels[0],function(d){
+		return d.getBBox().width;
 	});
 	yAxisWidth += settings.padding;
 
-	chartWidth = settings.width - yAxisWidth - settings.padding - settings.padding;
+	var chartWidth = settings.width - yAxisWidth - settings.padding;
+
+	var ypos = 0;
+	last_group = 0;
+	var bars = canvas.selectAll("g.bar").data(data).enter()
+	.append("g").attr("class","bar");
 	
-	if(!settings.min){
-		settings.min = d3.min(data, function(d){ 
-			if(d.low) return d.low;
-			return d.value;
-		});
-	}
-	if(!settings.max){
-		settings.max = d3.max(data, function(d){
-			if(d.high) return d.high;
-			return d.value;
-		});
-	}
 	var x = d3.scale.linear().domain([
 		settings.min,
 		settings.max
@@ -252,9 +266,14 @@ function make_chart(div,data,settings){
 
 	var steps = 0;
 	last_group = 0;
+	last_name = data[0].name;
 	data.forEach(function(d){
 		if(d.group != last_group){
 			last_group = d.group;
+			steps += 1;
+		}
+		if(d.name != last_name){
+			last_name = d.name;
 			steps += 1;
 		}
 		steps +=1;
@@ -266,6 +285,9 @@ function make_chart(div,data,settings){
 		barHeight = settings.barSize;
 	}
 
+	var nameLocations = {};
+
+	last_name = data[0].name;
 	last_group = 0;
 	ypos = 0;
 	bars.attr("transform",function(d){
@@ -273,13 +295,31 @@ function make_chart(div,data,settings){
 			last_group = d.group;
 			ypos += barHeight;
 		}
+		if(d.name != last_name){
+			last_name = d.name;
+			ypos += barHeight;
+		}
 		var translate = "translate(0,"+ypos+")";
+		if(!nameLocations[d[nameProperty]]) nameLocations[d[nameProperty]] = {'start':ypos };
+		
 		ypos += barHeight;
+
+		nameLocations[d[nameProperty]]['end'] = ypos;
+		nameLocations[d[nameProperty]]['width'] = nameLocations[d[nameProperty]]['end'] - nameLocations[d[nameProperty]]['start'];
+		nameLocations[d[nameProperty]]['middle'] = nameLocations[d[nameProperty]]['start'] + nameLocations[d[nameProperty]]['width']/2;
+
 		return translate;
 	}).append("rect").attr("height",barHeight).attr("width",function(d){
 		return x(d.value)
 	}).attr("fill", function(d){
-		return color(d.name, String(d.group));
+			if(settings.labels.length > 1){
+				return 	color(d.label,String(names.indexOf(d.name)));
+			}
+			return color(d.name, d.group);
+	});
+
+	yAxisLabels.attr("y", function(d){
+		return nameLocations[d]['middle'] - this.getBBox().height/4;
 	});
 
 	if(true){ // draw error margins if there is data
