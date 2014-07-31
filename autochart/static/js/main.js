@@ -218,7 +218,7 @@ function make_chart(div,data,settings){
 
 	// figure out x-axis height
 	ticks = x.ticks(settings.ticks);
-	axis.append("line").attr("x1",0).attr("x2",chartWidth).attr("y1",0).attr("y2",0).attr("stroke","gray").attr("stroke-width","1");
+	axis.append("line").attr("x1",0).attr("x2",chartWidth).attr("y1",0).attr("y2",0).attr("stroke","black").attr("stroke-width","1");
 	var tickMarks = axis.selectAll("g").data(ticks).enter().append("g").attr("transform", function(d){
 		return "translate("+x(d)+",0)";
 	});
@@ -318,7 +318,15 @@ function make_chart(div,data,settings){
 	}
 
 	axis.attr("transform", function(){ return "translate("+yAxisWidth+","+chartHeight+")"; });
-	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight).attr("stroke","gray").attr("stroke-width","1");
+	tickMarks.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight)
+	.attr("stroke",function(d){
+		if(d == settings.min) return "black";
+		return "gray";
+	})
+	.attr("stroke-width",function(d){
+		if(d == settings.min) return "0";
+		return "1";
+	});
 
 	if(target){
 		var targetPos = x(target.value);
@@ -424,6 +432,11 @@ function make_chart(div,data,settings){
 		bar.append("line").attr("x1",getHigh).attr("x2",getHigh).attr("y1", x1).attr("y2",x2)
 		.attr("stroke","black").attr("stroke-width","1");
 	});
+
+	// add y-axis line
+	svg.append("line").attr("x1",yAxisWidth).attr("x2",yAxisWidth).attr("y1",0).attr("y2",chartHeight)
+	.attr("stroke","black")
+	.attr("stroke-width","1");
 
 	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
 
