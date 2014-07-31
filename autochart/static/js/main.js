@@ -768,8 +768,6 @@ function make_vertical_chart(div,data,settings){
 
 	var chartHeight = settings.height - xAxisHeight;
 
-	canvas.append("line").attr("x1",0).attr("x2",chartWidth).attr("y1",0).attr("y2",0).attr("stroke","gray").attr("stroke-width","1");
-	canvas.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight).attr("stroke","gray").attr("stroke-width","1");
 	// translate canvas down
 	canvas.attr("transform","translate("+yAxisWidth+","+chartHeight+")")
 	
@@ -791,7 +789,10 @@ function make_vertical_chart(div,data,settings){
 		"x2":yAxisWidth,
 		"y1":0,
 		"y2":0,
-	}).attr("stroke","gray").attr("stroke-width","1");
+	}).attr("stroke","gray").attr("stroke-width",function(d){
+		if(d == settings.min) return "0";
+		return "1";
+	});
 
 	// Add Bars
 	bars.append("rect").attr({
@@ -842,6 +843,10 @@ function make_vertical_chart(div,data,settings){
 		bar.append("line").attr("y1",getHigh).attr("y2",getHigh).attr("x1", x1).attr("x2",x2)
 		.attr("stroke","black").attr("stroke-width","1");
 	});
+
+	// Add axis lines to bottom of chart so its above rectangles
+	canvas.append("line").attr("x1",0).attr("x2",chartWidth).attr("y1",0).attr("y2",0).attr("stroke","black").attr("stroke-width","1");
+	canvas.append("line").attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",0-chartHeight).attr("stroke","black").attr("stroke-width","1");
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
