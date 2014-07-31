@@ -136,7 +136,7 @@ def parse_worksheet(sheet):
                 cell_value = cell.value
                 if type(cell_value) in [float, int]:
                     cell_value = unicode(int(cell_value))
-                cell_value = cell_value.encode('ascii', 'ignore')
+                cell_value = cell_value
                 if cell_value.lower() in ['hi','high']:
                     current_value['high'] = num
                 elif cell_value.lower() in ['lo','low']:
@@ -157,7 +157,7 @@ def parse_worksheet(sheet):
                 cell_value = values[indx].value
                 if type(cell_value) in [float, int]:
                     cell_value = unicode(int(cell_value))
-                cell_value = cell_value.encode('ascii', 'ignore')
+                cell_value = cell_value
                 vals.append(cell_value)
                 indx += 1
             if len(vals) == 1:
@@ -173,7 +173,7 @@ def parse_worksheet(sheet):
                 row_name = values[0].value
                 if type(row_name) in [float, int]:
                     row_name = unicode(int(row_name))
-                row_name = row_name.encode('ascii', 'ignore')
+                row_name = row_name
                 d = {
                     'name':row_name,
                     'group':group_num,
@@ -202,7 +202,7 @@ def index(request):
                 keys = [d['name'] for d in data]
                 charts.append({
                     'name':name,
-                    'data':data,
+                    'data':json.dumps(data),
                     'form':SpecialSVGDownloadForm(metadata, targets=keys, labels=labels),
                     })
             return render_to_response('charts.html',{
