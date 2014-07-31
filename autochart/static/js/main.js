@@ -98,9 +98,9 @@ function make_chart(div,data,settings){
 		data = newData;
 	}
 
-	var nameProperty = "label";
+	var nameProperty = "name";
 	if(settings.labels && settings.labels.length > 1){
-		nameProperty = "name";
+		nameProperty = "label";
 	}
 
 	var names = [];
@@ -182,6 +182,8 @@ function make_chart(div,data,settings){
 	var axis = svg.append("g");
 	var canvas = svg.append("g").attr("transform", "translate(0,0)");
 	var yAxis = canvas.append("g").attr("class","yaxis");
+
+
 	// Make y-axis
 	var yAxisLabels = yAxis.selectAll("text").data(names).enter()
 	.append("text").text(function(d){
@@ -716,6 +718,12 @@ function make_vertical_chart(div,data,settings){
 			"height":rectHeight,
 			fill:function(d){
 				return color(d,"1");
+			},
+			'stroke':'#808080',
+			'stroke-dasharray':"4,2",
+			'stroke-width':function(d){
+				if(d == settings.target) return 2;
+				return 0;
 			}
 		})
 		labels.append("text").text(function(d){ return d; })
@@ -787,6 +795,12 @@ function make_vertical_chart(div,data,settings){
 				return 	color(d.label,"1");
 			}
 			return color(d.name, d.group);
+		},
+		'stroke':'#808080',
+		'stroke-dasharray':"4,2",
+		'stroke-width':function(d){
+			if(d.label == settings.target) return 2;
+			return 0;
 		}
 	});
 
