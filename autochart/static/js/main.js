@@ -770,6 +770,11 @@ function make_vertical_chart(div,data,settings){
 
 	// translate canvas down
 	canvas.attr("transform","translate("+yAxisWidth+","+chartHeight+")")
+
+	// move y-axis label down
+	label.attr("text-anchor","middle").attr("x",function(){
+		return 0-chartHeight/2;
+	});
 	
 	//Set Range
 	y.range(
