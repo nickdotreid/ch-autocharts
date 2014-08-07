@@ -53,6 +53,7 @@ function make_chart(div,data,settings){
 		'width':680,
 		'height':350,
 		'padding':5,
+		'padding-top':0,
 		'min':false,
 		'max':false,
 		'ticks':6,
@@ -328,26 +329,6 @@ function make_chart(div,data,settings){
 		return "1";
 	});
 
-	if(target){
-		var targetPos = x(target.value);
-		canvas.append("text").text(target.name).style({
-			"font-size":"15px",
-			"font-family":"Arial",
-			"font-weight":"bold",
-		}).attr("x", function(){
-			return targetPos+settings.padding;
-		}).attr("y",function(){
-			return this.getBBox().height;
-		});
-		axis.append("line").attr({
-			"x1":targetPos,
-			"x2":targetPos,
-			"y1":0,
-			"y2":0-chartHeight,
-		}).attr("stroke","black").attr("stroke-width","3").attr("stroke-dasharray","4,2");
-
-	}
-
 	var steps = 0;
 	last_group = 0;
 	last_name = data[0].name;
@@ -433,12 +414,38 @@ function make_chart(div,data,settings){
 		.attr("stroke","black").attr("stroke-width","1");
 	});
 
+	chartHeight = ypos + barHeight;
+
+	if(target){
+		var targetPos = x(target.value);
+		canvas.append("text").text(target.name).style({
+			"font-size":"15px",
+			"font-family":"Arial",
+			"font-weight":"bold",
+		}).attr("x", function(){
+			return targetPos+settings.padding;
+		}).attr("y",function(){
+			settings['padding-top'] = this.getBBox().height+settings.padding;
+			return 0-settings.padding;
+		});
+		axis.append("line").attr({
+			"x1":targetPos,
+			"x2":targetPos,
+			"y1":0,
+			"y2":0-chartHeight,
+		}).attr("stroke","black").attr("stroke-width","3").attr("stroke-dasharray","4,2");
+
+	}
+
+	axis.attr("transform", "translate("+yAxisWidth+","+ (chartHeight + settings['padding-top']) +")");
+	tickMarks.selectAll("line").attr("y2", (0-chartHeight));
+
 	// add y-axis line
-	svg.append("line").attr("x1",yAxisWidth).attr("x2",yAxisWidth).attr("y1",0).attr("y2",chartHeight)
+	svg.append("line").attr("x1",yAxisWidth).attr("x2",yAxisWidth).attr("y1",settings['padding-top']).attr("y2",(chartHeight + settings['padding-top']))
 	.attr("stroke","black")
 	.attr("stroke-width","1");
 
-	canvas.attr("transform", "translate("+yAxisWidth+","+(chartHeight - ypos -barHeight )+")");
+	canvas.attr("transform", "translate("+yAxisWidth+","+settings['padding-top']+")");
 
 	var svg = (new XMLSerializer).serializeToString($("svg",div)[0]);
 	$("#svgform #id_svg",chart.parents(".row")).val(svg);
